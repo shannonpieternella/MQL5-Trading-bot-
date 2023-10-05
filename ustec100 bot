@@ -1,0 +1,2519 @@
+//+------------------------------------------------------------------+
+//|                                                         8FXEA    |
+//|                                                                  |
+//|                                                                  |
+//+------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+
+
+// Create an instance of CTrade
+CTrade trade;
+double officialFourHrPoi;
+double savePoiBearish;
+double savePoiBullish;
+double lowCandle4hr;
+double highCandle4hr;
+double highValue;
+double lowValue;
+double highValueOne;
+double lowValueOne;
+string fourhrSwing;
+string onehrSwing;
+string sessionBias;
+string monthlyBias;
+string intradayBias;
+input bool sellOn2; //Sell
+input bool buyOn2; //Buy
+int saveTimeBuyhourLimit;
+int saveTimeSellhourLimit;
+int institutionalPriceNumber;
+double gapEntryLevelHourBullish;
+double gapEntryLevelHourBearish;
+bool stoptrading;
+bool institutionalPrice;
+input bool sellModeLimit; //Sell limit sniper
+input bool buyModeLimit; // Buy Limit sniper
+int saveLowest;
+int saveLowestLondon;
+int saveHighestLondon;
+int saveLowestLimit;
+int saveHighestLimit;
+int saveLowestLimitSell;
+int saveHighestLimitSell;
+input bool londonSession;
+input bool newYorkSession; // New York session
+int saveHighest;
+bool gbpusdLiquidityHigh;
+bool gbpusdLiquidityLow;
+bool eurusdLiquidityHigh;
+bool eurusdLiquidityLow;
+bool xauusdLiquidityHigh;
+bool xauusdLiquidityLow;
+bool us30LiquidityHigh;
+bool us30LiquidityLow;
+bool ustecLiquidityHigh;
+bool ustecLiquidityLow;
+bool bearishOb;
+bool bullishOb;
+string saveGapMonth;
+bool silverBullet; // Silver Bullet
+input int takeProfit = 10000; //Take Profit
+input bool intradayTrade; //Intraday Trading
+bool premiumSave;
+bool discountSave;
+int saveTimeBuy5;
+int saveTimeBuyUstec;
+int saveTimeBuyGbp;
+int saveTimeBuyEur;
+int saveTimeBuyuS30;
+int saveTimeBuyXau;
+bool discountSaveDaily;
+bool premiumSaveDaily;
+bool resetDiscount;
+bool resetPremium;
+bool saveDiscount;
+bool savePremium;
+bool isBuyExecuted = false;
+bool isSellExecuted = false;
+datetime liquidityHitLowSave;
+datetime liquidityHitHighSave;
+bool monthlyLowHit;
+bool monthlyHighHit;
+bool todayDay;
+bool monthlySwing;
+bool weeklySwingHigh;
+bool weeklySwingLow;
+bool monthlySwingHigh;
+bool monthlySwingLow;
+bool dailySwing;
+bool fullWeeklySwingLow;
+bool fullWeeklySwingHigh;
+bool fullMonthlySwingLow;
+bool fullMonthlySwingHigh;
+double swingHighArray[];
+double swingLowArray[];
+double High[];
+double Low[];
+bool bearishGap;
+bool bullishGap;
+bool bullishgaplow5;
+double initialBalance = AccountInfoDouble(ACCOUNT_EQUITY);
+//Inputs
+input double lotSize; //Lot Size
+input bool sellOnly; // Sell
+input bool buyOnly; // Buy
+bool swingTrade; // Swing Trade
+input double dailyLossLimit=500; // Daily Loss Limit
+double targetProfit; // Target Profit Amount
+bool discountOn;
+bool premiumOn;
+bool discountOnDaily;
+bool premiumOnDaily;
+bool discountOnWeekly;
+bool premiumOnWeekly;
+//weekly
+bool bullishGapFour;
+bool bearishGapFour;
+double bullishgaplowweekly;
+bool weeklyLowHitFour;
+double liquidityWeeklyHitLowSave;
+double liquidityWeeklyHitHighSave;
+bool weeklyHighHitFour;
+double bearishgaphighfour;
+int saveTimeSellFour;
+int saveTimeBuyFour;
+int saveTimeBuy15;
+int saveTimeBuyhour;
+int saveTimeSellhour;
+bool bullishGap15;
+bool bearishGap15;
+bool bullishGaphour;
+bool bearishGaphour;
+
+double bullishgaplow15;
+double bullishgaplowhour;
+double bearishgaphighhour;
+int saveTimeSell15;
+int saveTimeSell5;
+int bearishgaphigh5;
+bool bearishgaphigh15;
+//
+
+bool stopSellStacking;
+bool stopBuyStacking;
+bool buyOn;
+bool sellOn;
+double bearishgaphigh;
+double bullishgaplow;
+bool stopLoop;
+int swingLowCount = 0; // Counter for the number of swing lows found
+int swingHighCount = 0; // Counter for the number of swing highs found
+double swingLowFirst = 0.0; // First swing low
+double swingLowSecond = 0.0; // Second swing low
+double swingHighFirst = 0.0; // First swing high
+double swingHighSecond = 0.0; // Second swing high
+int saveTimeBuy;
+int saveWeek;
+int saveTimeBuyDaily;
+int saveTimeBuyDailyob;
+int saveTimeSellDaily;
+int saveTimeSell;
+
+
+bool bullish;
+bool bearish;
+double prevHigh;
+double prevLow;
+
+bool sellNow;
+bool buyNow;
+//loop from right to left after swings are recognized to save swing high and low scan old then break loop
+// create condition if swing low new is lower then prev swing low put sellstop under it after a certain hour.
+//Then if previous low is not broken after a certain hour buy at swing 4th candle and set trend to bullish if swing high gets broken
+// if high is higher then prev high set and prev low is higher then prev low and then breaks high again buy.
+//scan for gap when price is bullish when failed lower low
+//Setup wanneer low old swing word gehit door new swing en dan high swing old word gehit scan dan voor bullish gap en entry
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Custom timer event function                                      |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+// Call your desired function here
+// Replace "YourFunctionName" with the name of the function you want to run every 6 hours
+// ModifyPositions();
+
+  }
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+
+// ModifyPositions();
+   Equilibrium();
+
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   CheckBias();
+   ScanMonthlyGaps();
+// Set the timer interval to 6 hours (in seconds)
+   int timerInterval = 3 * 30 * 30;
+
+// Register the custom timer event
+   EventSetTimer(timerInterval);
+   return INIT_SUCCEEDED;
+  }
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+// Unregister the custom timer event when the EA is removed or stopped
+   EventKillTimer();
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   if(silverBullet == true)
+     {
+      SilverBullet();
+      Print("Silver Bullet On");
+     }
+
+   datetime endDate = D'2023.10.01 00:00:00';
+   if(TimeCurrent() > endDate)
+     {
+      Comment("Bot Time Expired");
+     }
+   if(silverBullet == false && TimeCurrent() < endDate)
+     {
+      // Print("Discount " + discountSaveDaily + " Premium " + premiumSaveDaily);
+      resetDayEquilibrium();
+      Equilibrium();
+      StopTradesWhenBalanceBelow();
+      StopTradingIfDailyLossExceeded();
+      // DrawBoxes();
+      OrdersNow();
+      FindGapshour();
+      // CheckGapsAndTrade();
+      SwingEntry();
+      LimitOrderBuy();
+      LimitOrderSell();
+      scanSwings();
+      // liquidityScanMonthly();
+      //  scanMonthlyHighsAndLows();
+      // sniperEntry();
+      CheckBias();
+      FindGaps();
+      OnLiquidityHit();
+      IfGapNotValidScan();
+      closeTradesTPChanged();
+      resetStack();
+      FindGapsFifteen();
+      scanLiquidityMarkets();
+      //Print("gap month ", saveGapMonth, ", Gap value: ");
+      MqlDateTime current;
+      TimeToStruct(TimeCurrent(), current);
+
+      if(current.day_of_week == 1 && current.hour > 1 && current.hour < 2)
+        {
+         ScanMonthlyGaps();
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DrawBoxes()
+  {
+// Create an Array for prices
+   MqlRates PriceInformation[];
+
+
+
+// Copy price data into the array
+   int Data = CopyRates(Symbol(), PERIOD_H4, 0, Bars(Symbol(),Period()), PriceInformation);
+
+// Sort it from current candle to oldest candle
+   ArraySetAsSeries(PriceInformation, true);
+
+// Define specific days
+   int specific_days[] = {4, 7, 10, 13, 16, 19, 22, 25, 28, 31};
+
+   for(int i = 0; i < 300; i++)
+     {
+
+
+      MqlDateTime ds;
+      TimeToStruct(PriceInformation[i].time, ds);
+
+
+      // Reset todayDay to false at the start of each iteration
+      todayDay = false;
+
+      for(int j = 0; j < ArraySize(specific_days); j++)
+        {
+         if(ds.day == specific_days[j])
+           {
+            todayDay = true;
+            break;  // No need to continue the loop if todayDay is already true
+           }
+        }
+
+      if(ds.hour == 8 && ds.day_of_week !=  2)
+        {
+         // Draw the box
+         //  ObjectCreate(0, "seh" + i, OBJ_RECTANGLE, 0, PriceInformation[i].time, PriceInformation[i].high, PriceInformation[i].time + 14400, PriceInformation[i].low);
+         //  ObjectSetInteger(0, "seh" + i, OBJPROP_COLOR, clrYellow);
+         //  ObjectSetInteger(0, "seh" + i, OBJPROP_BACK, true);
+         //  ObjectSetInteger(0, "seh" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+
+
+      if(ds.hour == 8 && ds.day_of_week ==  2)
+        {
+         // Draw the box
+         //   ObjectCreate(0, "seh" + i, OBJ_RECTANGLE, 0, PriceInformation[i].time, PriceInformation[i].high, PriceInformation[i].time + 14400, PriceInformation[i].low);
+         // ObjectSetInteger(0, "seh" + i, OBJPROP_COLOR, clrRed);
+         // ObjectSetInteger(0, "seh" + i, OBJPROP_BACK, true);
+         //ObjectSetInteger(0, "seh" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnLiquidityHit()
+  {
+// Get the high and low of the last Daily bar
+   double prevDay1high = iHigh(_Symbol, PERIOD_D1, 1);
+   double prevDay1low = iLow(_Symbol, PERIOD_D1, 1);
+
+// Get the high and low of the last Weekly bar
+   double prevWeek1high = iHigh(_Symbol, PERIOD_W1, 1)-300*_Point;
+   double prevWeek1low = iLow(_Symbol, PERIOD_W1, 1)+600*_Point;
+
+// Get the high and low of the last Monthly bar
+   double prevMonth1high = iHigh(_Symbol, PERIOD_MN1, 1)-600*_Point;
+   double prevMonth1low = iLow(_Symbol, PERIOD_MN1, 1)+600*_Point;
+
+// Get current time
+   datetime currentTime = TimeCurrent();
+
+// Remove previous trendlines if they exist
+   if(ObjectFind(0, "HighLine") != -1)
+      ObjectDelete(0, "HighLine");
+   if(ObjectFind(0, "LowLine") != -1)
+      ObjectDelete(0, "LowLine");
+   if(ObjectFind(0, "HighWeekLine") != -1)
+      ObjectDelete(0, "HighWeekLine");
+   if(ObjectFind(0, "LowWeekLine") != -1)
+      ObjectDelete(0, "LowWeekLine");
+   if(ObjectFind(0, "HighMonthLine") != -1)
+      ObjectDelete(0, "HighMonthLine");
+   if(ObjectFind(0, "LowMonthLine") != -1)
+      ObjectDelete(0, "LowMonthLine");
+
+// Create daily high trendline
+// ObjectCreate(0, "HighLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_D1, 1), prevDay1high, currentTime, prevDay1high);
+// ObjectSetInteger(0, "HighLine", OBJPROP_COLOR, clrRed);
+// ObjectSetInteger(0, "HighLine", OBJPROP_WIDTH, 2);
+//ObjectSetInteger(0, "HighLine", OBJPROP_RAY_RIGHT, true);
+
+// Create daily low trendline
+//ObjectCreate(0, "LowLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_D1, 1), prevDay1low, currentTime, prevDay1low);
+// ObjectSetInteger(0, "LowLine", OBJPROP_COLOR, clrRed);
+// ObjectSetInteger(0, "LowLine", OBJPROP_WIDTH, 2);
+// ObjectSetInteger(0, "LowLine", OBJPROP_RAY_RIGHT, true);
+   if(0==1)
+     {
+      // Create weekly high trendline
+      ObjectCreate(0, "HighWeekLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_W1, 1), prevWeek1high, currentTime, prevWeek1high);
+      ObjectSetInteger(0, "HighWeekLine", OBJPROP_COLOR, clrBlue);
+      ObjectSetInteger(0, "HighWeekLine", OBJPROP_WIDTH, 2);
+      ObjectSetInteger(0, "HighWeekLine", OBJPROP_RAY_RIGHT, true);
+
+      //Create weekly low trendline
+      ObjectCreate(0, "LowWeekLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_W1, 1), prevWeek1low, currentTime, prevWeek1low);
+      ObjectSetInteger(0, "LowWeekLine", OBJPROP_COLOR, clrBlue);
+      ObjectSetInteger(0, "LowWeekLine", OBJPROP_WIDTH, 2);
+      ObjectSetInteger(0, "LowWeekLine", OBJPROP_RAY_RIGHT, true);
+
+      //Create monthly high trendline
+      ObjectCreate(0, "HighMonthLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_MN1, 1), prevMonth1high, currentTime, prevMonth1high);
+      ObjectSetInteger(0, "HighMonthLine", OBJPROP_COLOR, clrGreen);
+      ObjectSetInteger(0, "HighMonthLine", OBJPROP_WIDTH, 2);
+      ObjectSetInteger(0, "HighMonthLine", OBJPROP_RAY_RIGHT, true);
+
+      // Create monthly low trendline
+      ObjectCreate(0, "LowMonthLine", OBJ_TREND, 0, iTime(_Symbol, PERIOD_MN1, 1), prevMonth1low, currentTime, prevMonth1low);
+      ObjectSetInteger(0, "LowMonthLine", OBJPROP_COLOR, clrGreen);
+      ObjectSetInteger(0, "LowMonthLine", OBJPROP_WIDTH, 2);
+      ObjectSetInteger(0, "LowMonthLine", OBJPROP_RAY_RIGHT, true);
+     }
+   if(iLow(_Symbol, PERIOD_D1, 0) < prevDay1low)
+     {
+      //Print("Previous day's low was hit");
+     }
+
+   if(iHigh(_Symbol, PERIOD_D1, 0) > prevDay1high)
+     {
+      // Print("Previous day's high was hit");
+     }
+
+// Check if previous week's high or low was surpassed
+   if(iLow(_Symbol, PERIOD_W1, 0) < prevWeek1low && liquidityWeeklyHitLowSave != iTime(_Symbol, PERIOD_W1, 0))
+     {
+      // Print("Previous week's low was hit");
+      weeklyLowHitFour=true;
+      liquidityWeeklyHitLowSave= iTime(_Symbol, PERIOD_W1, 0);
+      bullishGapFour=false;
+      bearishGapFour=false;
+     }
+
+   if(iHigh(_Symbol, PERIOD_W1, 0) > prevWeek1high && liquidityHitHighSave != iTime(_Symbol, PERIOD_W1, 0))
+     {
+      // Print("Previous week's high was hit");
+      weeklyHighHitFour=true;
+      liquidityWeeklyHitHighSave= iTime(_Symbol, PERIOD_W1, 0);
+      bullishGapFour=false;
+      bearishGapFour=false;
+     }
+
+// Check if previous month's high or low was surpassed
+   if(iLow(_Symbol, PERIOD_MN1, 0) < prevMonth1low && liquidityHitLowSave != iTime(_Symbol, PERIOD_MN1, 0))
+     {
+      // Print("Previous month's low was hit");
+      monthlyLowHit=true;
+      liquidityHitLowSave= iTime(_Symbol, PERIOD_MN1, 0);
+      bullishGap=false;
+      bearishGap=false;
+     }
+
+   if(iHigh(_Symbol, PERIOD_MN1, 0) > prevMonth1high && liquidityHitHighSave != iTime(_Symbol, PERIOD_MN1, 0))
+     {
+      monthlyHighHit=true;
+      Print("Previous month's high was hit");
+      liquidityHitHighSave= iTime(_Symbol, PERIOD_MN1, 0);
+      bullishGap=false;
+      bearishGap=false;
+     }
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OrdersNow()
+  {
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+
+   if(current.hour == 12 && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      //trade.SellStop(0.3, iLow(_Symbol, PERIOD_H4, 1), _Symbol, iHigh(_Symbol, PERIOD_H4, 1), iLow(_Symbol, PERIOD_H4, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //trade.BuyStop(0.3, iHigh(_Symbol, PERIOD_H4, 1), _Symbol, iLow(_Symbol, PERIOD_H4, 1), iHigh(_Symbol, PERIOD_H4, 0)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+
+     }
+
+
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void SwingEntry()
+  {
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   if(current.day == 27)
+     {
+      // CloseAllPositions();
+
+     }
+
+   if(current.day_of_week == 1)
+     {
+      //  CloseAllPositions();
+
+     }
+
+//reset values begin van de week
+   if(current.day_of_week == 5 && current.hour > 21)
+     {
+      fullWeeklySwingHigh=false;
+      fullWeeklySwingLow=false;
+
+
+     }
+// Print("full swing low " + fullWeeklySwingLow + "full swing low " + fullWeeklySwingLow +" full swing high " + fullWeeklySwingHigh + " day " + current.day + " Weekly swing low " + weeklySwingLow + " Weekly swing high " + weeklySwingHigh);
+// Print("Monthly low hit" + monthlyLowHit + "full swing monthly low " + fullMonthlySwingLow + " full swing monthly high " + fullMonthlySwingHigh + " Monthly swing low " + monthlySwingLow + " Monthly swing high " + monthlySwingHigh);
+   if(current.day > 3 && iHigh(_Symbol, PERIOD_MN1, 0) < iOpen(_Symbol, PERIOD_MN1, 0) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      //trade.SellStop(0.3, iOpen(_Symbol, PERIOD_MN1, 0), _Symbol, iHigh(_Symbol, PERIOD_MN1, 1), iLow(_Symbol, PERIOD_MN1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //trade.Sell(1, NULL, Bid, iHigh(_Symbol, PERIOD_MN1, 1), iLow(_Symbol, PERIOD_MN1, 0)-1000*_Point, NULL);
+      //Print("bearish monthly swing");
+     }
+
+
+   if(current.day > 3 && iLow(_Symbol, PERIOD_MN1, 0) > iOpen(_Symbol, PERIOD_MN1, 0) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      //trade.BuyStop(0.3, iOpen(_Symbol, PERIOD_MN1, 0), _Symbol, iLow(_Symbol, PERIOD_MN1, 1), iHigh(_Symbol, PERIOD_MN1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //trade.Buy(1, NULL, Ask, iLow(_Symbol, PERIOD_MN1, 1), iHigh(_Symbol, PERIOD_MN1, 2)+1000*_Point, NULL);
+      //Print("bullish monthly swing");
+     }
+
+//Monthly swing
+
+   if(current.day > 10 && current.day < 32 && iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1) && iHigh(_Symbol, PERIOD_MN1, 1) > iHigh(_Symbol, PERIOD_MN1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      // trade.SellStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      // Print("bearish weekly swing");
+      monthlySwingHigh=true;
+     }
+
+//Full Weekly bearish swing
+   if(current.day > 10 && current.day < 32 && iHigh(_Symbol, PERIOD_MN1, 1) < iHigh(_Symbol, PERIOD_MN1, 2) && iHigh(_Symbol, PERIOD_MN1, 2) > iHigh(_Symbol, PERIOD_MN1, 3) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      // trade.SellStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      // Print("bearish weekly swing");
+      fullMonthlySwingHigh=true;
+     }
+
+
+   if(current.day > 10 && current.day < 32 && iLow(_Symbol, PERIOD_MN1, 0) > iLow(_Symbol, PERIOD_MN1, 1) && iLow(_Symbol, PERIOD_MN1, 1) < iLow(_Symbol, PERIOD_MN1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      monthlySwingLow=true;
+      //  dailySwing=true;
+      //  trade.BuyStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //  Print("bullish weekly swing");
+     }
+
+// full weekly swing
+
+   if(current.day > 1 && current.day < 32 && iLow(_Symbol, PERIOD_MN1, 1) > iLow(_Symbol, PERIOD_MN1, 2) && iLow(_Symbol, PERIOD_MN1, 2) < iLow(_Symbol, PERIOD_MN1, 3) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      fullMonthlySwingLow=true;
+      //  dailySwing=true;
+      //  trade.BuyStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //  Print("bullish weekly swing");
+     }
+
+//Weekly swing
+   if(current.day > 10 && current.day < 32 && iHigh(_Symbol, PERIOD_W1, 0) < iHigh(_Symbol, PERIOD_W1, 1) && iHigh(_Symbol, PERIOD_W1, 1) > iHigh(_Symbol, PERIOD_W1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      // trade.SellStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      // Print("bearish weekly swing");
+      weeklySwingHigh=true;
+     }
+
+//Full Weekly bearish swing
+   if(current.day > 1 && current.day < 32 && iHigh(_Symbol, PERIOD_W1, 1) < iHigh(_Symbol, PERIOD_W1, 2) && iHigh(_Symbol, PERIOD_W1, 2) > iHigh(_Symbol, PERIOD_W1, 3) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      // trade.SellStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      // Print("bearish weekly swing");
+      fullWeeklySwingHigh=true;
+     }
+
+
+   if(current.day > 10 && current.day < 32 && iLow(_Symbol, PERIOD_W1, 0) > iLow(_Symbol, PERIOD_W1, 1) && iLow(_Symbol, PERIOD_W1, 1) < iLow(_Symbol, PERIOD_W1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      weeklySwingLow=true;
+      //  dailySwing=true;
+      //  trade.BuyStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //  Print("bullish weekly swing");
+     }
+
+// full weekly swing
+
+   if(current.day > 1 && current.day < 32 && iLow(_Symbol, PERIOD_W1, 1) > iLow(_Symbol, PERIOD_W1, 2) && iLow(_Symbol, PERIOD_W1, 2) < iLow(_Symbol, PERIOD_W1, 3) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+     {
+      fullWeeklySwingLow=true;
+      //  dailySwing=true;
+      //  trade.BuyStop(0.3, iOpen(_Symbol, PERIOD_W1, 0), _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+      //  Print("bullish weekly swing");
+     }
+
+
+
+
+
+
+//Daily swing low
+   int specific_days[] = {4, 6, 7, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30, 31};
+
+   for(int j = 0; j < ArraySize(specific_days); j++)
+     {
+      if(current.day == specific_days[j])
+        {
+         if(iLow(_Symbol, PERIOD_D1, 0) > iLow(_Symbol, PERIOD_D1, 1) && iLow(_Symbol, PERIOD_D1, 1) < iLow(_Symbol, PERIOD_D1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+           {
+            if(current.day > 10 && current.day != 27)
+              {
+               // trade.BuyStop(0.3, iHigh(_Symbol, PERIOD_D1, 1), _Symbol, iLow(_Symbol, PERIOD_D1, 1), iHigh(_Symbol, PERIOD_D1, 2)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+               if(iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //  trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask+1000*_Point, NULL);
+                  // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask+6000*_Point, NULL);
+
+                 }
+               if(iHigh(_Symbol, PERIOD_MN1, 0) > iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //  trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask+6000*_Point, NULL);
+                  //  trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask+1000*_Point, NULL);
+
+                 }
+
+
+               // Print("bullish daily swing");
+               weeklySwingLow = false;
+               weeklySwingHigh = false;
+               fullWeeklySwingLow = false;
+               fullWeeklySwingHigh = false;
+               fullMonthlySwingHigh = false;
+               fullMonthlySwingLow = false;
+               monthlySwingHigh = false;
+               monthlySwingLow = false;
+              }
+           }
+         break;  // No need to continue the loop if todayDay is already true
+        }
+     }
+
+//Daily Swing high entry
+   for(int j = 0; j < ArraySize(specific_days); j++)
+     {
+      if(current.day == specific_days[j])
+        {
+         if(iHigh(_Symbol, PERIOD_D1, 0) < iHigh(_Symbol, PERIOD_D1, 1) && iHigh(_Symbol, PERIOD_D1, 1) > iHigh(_Symbol, PERIOD_D1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+           {
+
+            if(current.day > 10 && current.day != 27)
+              {
+               //trade.SellStop(0.3, iLow(_Symbol, PERIOD_D1, 1), _Symbol, iHigh(_Symbol, PERIOD_D1, 1), iLow(_Symbol, PERIOD_D1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+               if(iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //  trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), Bid-1000*_Point, NULL);
+                  //  trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), Bid-6000*_Point, NULL);
+
+                 }
+               if(iHigh(_Symbol, PERIOD_MN1, 0) > iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //   trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), Bid-1000*_Point, NULL);
+                  // trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), Bid-6000*_Point, NULL);
+
+                 }
+
+               // Print(" sell Daily swing" + " Current day " + current.day);
+               weeklySwingLow = false;
+               weeklySwingHigh = false;
+               fullWeeklySwingLow = false;
+               fullWeeklySwingHigh = false;
+               fullMonthlySwingHigh = false;
+               fullMonthlySwingLow = false;
+               monthlySwingHigh = false;
+               monthlySwingLow = false;
+
+              }
+
+           }
+         break;  // No need to continue the loop if todayDay is already true
+        }
+     }
+
+
+//Liquidity hit entry
+
+   for(int j = 0; j < ArraySize(specific_days); j++)
+     {
+      if(current.day == specific_days[j])
+        {
+         if(iHigh(_Symbol, PERIOD_D1, 0) < iHigh(_Symbol, PERIOD_D1, 1) && iHigh(_Symbol, PERIOD_D1, 1) < iHigh(_Symbol, PERIOD_D1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+           {
+
+            if(monthlyLowHit == true && current.hour > 1 && current.day < 10)
+              {
+               //trade.SellStop(0.3, iLow(_Symbol, PERIOD_D1, 1), _Symbol, iHigh(_Symbol, PERIOD_D1, 1), iLow(_Symbol, PERIOD_D1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+               if(iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), iHigh(_Symbol, PERIOD_MN1, 1), NULL);
+
+                 }
+               if(iHigh(_Symbol, PERIOD_MN1, 0) > iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), iHigh(_Symbol, PERIOD_MN1, 1)+1000*_Point, NULL);
+
+                 }
+               // Print("monthly liquidity buy swing");
+               weeklySwingLow = false;
+               weeklySwingHigh = false;
+               fullWeeklySwingLow = false;
+               fullWeeklySwingHigh = false;
+               fullMonthlySwingHigh = false;
+               fullMonthlySwingLow = false;
+               monthlySwingHigh = false;
+               monthlySwingLow = false;
+               // monthlyLowHit = false;
+               // monthlyHighHit = false;
+
+              }
+
+           }
+         break;  // No need to continue the loop if todayDay is already true
+        }
+     }
+
+//Liquidity hit entry sell
+   for(int j = 0; j < ArraySize(specific_days); j++)
+     {
+      if(current.day == specific_days[j])
+        {
+         if(iHigh(_Symbol, PERIOD_D1, 0) < iHigh(_Symbol, PERIOD_D1, 1) && iHigh(_Symbol, PERIOD_D1, 1) > iHigh(_Symbol, PERIOD_D1, 2) && (PositionSelect(Symbol()) == false) && OrdersTotal() < 1)
+           {
+
+            if(monthlyHighHit == true && current.hour > 1 && current.day < 10)
+              {
+               //trade.SellStop(0.3, iLow(_Symbol, PERIOD_D1, 1), _Symbol, iHigh(_Symbol, PERIOD_D1, 1), iLow(_Symbol, PERIOD_D1, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+               if(iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  //trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), iLow(_Symbol, PERIOD_MN1, 1), NULL);
+
+                 }
+               if(iHigh(_Symbol, PERIOD_MN1, 0) > iHigh(_Symbol, PERIOD_MN1, 1))
+                 {
+                  // trade.Sell(0.3, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1), iLow(_Symbol, PERIOD_MN1, 1)+1000*_Point, NULL);
+
+                 }
+
+               // Print("monthly sell Liquidity" + " Current day " + current.day);
+               weeklySwingLow = false;
+               weeklySwingHigh = false;
+               fullWeeklySwingLow = false;
+               fullWeeklySwingHigh = false;
+               fullMonthlySwingHigh = false;
+               fullMonthlySwingLow = false;
+               monthlySwingHigh = false;
+               monthlySwingLow = false;
+               // monthlyLowHit = false;
+               // monthlyHighHit = false;
+
+              }
+
+           }
+         break;  // No need to continue the loop if todayDay is already true
+        }
+     }
+
+
+//trade.SellStop(0.3, iLow(_Symbol, PERIOD_H4, 1), _Symbol, iHigh(_Symbol, PERIOD_H4, 1), iLow(_Symbol, PERIOD_H4, 0)-1000*_Point, ORDER_TIME_DAY, 0, NULL);
+//trade.BuyStop(0.3, iHigh(_Symbol, PERIOD_H4, 1), _Symbol, iLow(_Symbol, PERIOD_H4, 1), iHigh(_Symbol, PERIOD_H4, 0)+1000*_Point, ORDER_TIME_DAY, 0, NULL);
+
+  }
+
+
+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CheckGapsAndTrade()
+  {
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime secondslow;
+   TimeToStruct(TimeCurrent(), secondslow);
+
+   MqlDateTime secondshigh;
+   TimeToStruct(TimeCurrent(), secondshigh);
+
+//printf("sec high " + secondshigh.min + " sec low " + secondslow.min);
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+// Get the high and low of the current 1-minute bar
+   double currentHigh = iHigh(_Symbol, PERIOD_M1, 0);
+   double currentLow = iLow(_Symbol, PERIOD_M1, 0);
+
+// Get the high and low of the previous 1-minute bar
+   double previousHigh = iHigh(_Symbol, PERIOD_M1, 1);
+   double previousLow = iLow(_Symbol, PERIOD_M1, 1);
+
+// Check for a bullish gap
+   if(iLow(_Symbol, PERIOD_M1, 1) > iHigh(_Symbol, PERIOD_M1, 3)+10*_Point && current.hour > 03 && current.hour < 22 && currentLow > previousHigh + _Point && PositionSelect(Symbol()) == false)
+     {
+      // There's a bullish gap. We should consider buying.
+      // Calculate stop loss and take profit levels
+      double buyStopLoss = currentLow - 50 * _Point;
+      double buyTakeProfit = currentHigh + 300 * _Point;
+      if(secondshigh.min == 7 || secondshigh.min == 4 || secondshigh.min == 14  || secondshigh.min == 17 || secondshigh.min == 10  || secondshigh.min == 24 || secondshigh.min == 27 || secondshigh.min == 34 || secondshigh.min == 37 || secondshigh.min == 44 || secondshigh.min == 47 || secondshigh.min == 54 || secondshigh.min == 57)
+        {
+         // Place a buy order
+         trade.Buy(1, NULL, Ask, buyStopLoss, buyTakeProfit, NULL);
+        }
+
+     }
+
+// Check for a bearish gap
+   else
+      if(iHigh(_Symbol, PERIOD_M1, 1) < iLow(_Symbol, PERIOD_M1, 3)-10*_Point && current.hour > 03 && current.hour < 22 && currentHigh + _Point < previousLow && PositionSelect(Symbol()) == false)
+        {
+         // There's a bearish gap. We should consider selling.
+         // Calculate stop loss and take profit levels
+
+         double sellStopLoss = currentHigh + 50 * _Point;
+         double sellTakeProfit = currentLow - 300 * _Point;
+         if(secondshigh.min == 7 || secondshigh.min == 4 || secondshigh.min == 14  || secondshigh.min == 17 || secondshigh.min == 10  || secondshigh.min == 24 || secondshigh.min == 27 || secondshigh.min == 34 || secondshigh.min == 37 || secondshigh.min == 44 || secondshigh.min == 47 || secondshigh.min == 54 || secondshigh.min == 57)
+           {
+            // Place a sell order
+            trade.Sell(1, NULL, Bid, sellStopLoss, sellTakeProfit, NULL);
+           }
+
+        }
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CloseAllPositions()
+  {
+   stopLoop=true;
+// Close all open positions
+   int positions = PositionsTotal();
+   for(int i=positions-1; i>=0; i--)
+     {
+      ulong ticket = PositionGetTicket(i);
+      // trade.PositionClose(ticket,ULONG_MAX);
+      Print("Looped positions and closed " + i);
+     }
+
+// Cancel all pending orders
+   int orders = OrdersTotal();
+   for(int i=orders-1; i>=0; i--)
+     {
+      ulong ticket = OrderGetTicket(i);
+      trade.OrderDelete(ticket);
+      Print("Looped orders and closed " + i);
+
+     }
+
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void scanSwings()
+  {
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandle4hr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandle4hr);
+
+   MqlDateTime currentcandleDailyhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDailyhr);
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+   for(int j = 30; j >= 0; j--)
+     {
+      // Recognize swing low
+      if(iLow(_Symbol, PERIOD_H4, j) < iLow(_Symbol, PERIOD_H4, j - 1) &&
+         iLow(_Symbol, PERIOD_H4, j) < iLow(_Symbol, PERIOD_H4, j + 1))
+        {
+         ArrayResize(swingLowArray, 2);
+         swingLowArray[1] = swingLowArray[0];
+         swingLowArray[0] = iLow(_Symbol, PERIOD_H4, j);
+
+         // Create the arrow object for the first swing high
+         string arrowNameHigh = "ArrowHigh" + IntegerToString(j);
+         //   ObjectCreate(0, arrowNameHigh, OBJ_ARROW_UP, 0, iTime(_Symbol, PERIOD_H4, j), swingLowArray[0]);
+         //   ObjectSetInteger(0, arrowNameHigh, OBJPROP_ARROWCODE, 234); // Unicode arrow code for the arrow symbol
+         //   ObjectSetInteger(0, arrowNameHigh, OBJPROP_COLOR, clrYellow);
+
+        }
+
+      // Recognize swing high
+      if(iHigh(_Symbol, PERIOD_H4, j) > iHigh(_Symbol, PERIOD_H4, j - 1) &&
+         iHigh(_Symbol, PERIOD_H4, j) > iHigh(_Symbol, PERIOD_H4, j + 1))
+        {
+         ArrayResize(swingHighArray, 2);
+         swingHighArray[1] = swingHighArray[0];
+         swingHighArray[0] = iHigh(_Symbol, PERIOD_H4, j);
+
+         // Create the arrow object for the first swing high
+         string arrowNameHigh = "ArrowHigh" + IntegerToString(j);
+         //  ObjectCreate(0, arrowNameHigh, OBJ_ARROW_DOWN, 0, iTime(_Symbol, PERIOD_H4, j), swingHighArray[0]);
+         //  ObjectSetInteger(0, arrowNameHigh, OBJPROP_ARROWCODE, 234); // Unicode arrow code for the arrow symbol
+         //  ObjectSetInteger(0, arrowNameHigh, OBJPROP_COLOR, clrRed);
+        }
+     }
+
+// Print("First two closest swing lows: eerste is de laatste swing ", swingLowArray[0], ", ", swingLowArray[1]);
+// Print("First two closest swing highs: ", swingHighArray[0], ", ", swingHighArray[1]);
+   if(swingLowArray[0] < swingLowArray[1])
+     {
+      //Print("sellstop Liquidity hit");
+     }
+
+   if(swingHighArray[0] > swingHighArray[1])
+     {
+      //Print("buystops Liquidity hit");
+     }
+
+   if((current.hour > 11 && current.hour < 13 || current.hour > 16 && current.hour < 19) && bullishGap == true && current.day != 27 && saveTimeBuy != currentcandle4hr.hour && swingLowArray[0] < swingLowArray[1] && current.day > 10)
+     {
+
+      //  saveTimeBuy = currentcandle4hr.hour; // Update saveTimeBuy first
+      //   trade.Buy(0.3, NULL, Ask, swingLowArray[0], Ask + 6000 * _Point, NULL);
+      //   sellNow = false;
+      //   buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+
+   if((current.hour > 11 && current.hour < 13 || current.hour > 16 && current.hour < 19) && bearishGap == true && current.day != 27 && saveTimeSell != currentcandle4hr.hour && swingHighArray[0] > swingHighArray[1] && current.day > 10)
+     {
+      //saveTimeSell = currentcandle4hr.hour; // Update saveTimeSell first
+      //trade.Sell(0.3, NULL, Bid, swingHighArray[0], Bid - 6000 * _Point, NULL);
+      //   buyNow = false;
+      //  sellNow = true;
+      //  Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+
+//swing low daily entry
+// Get the high and low of the last Monthly bar
+   double prevMonth1high = iHigh(_Symbol, PERIOD_MN1, 1)-600*_Point;
+   double prevMonth1low = iLow(_Symbol, PERIOD_MN1, 1)+600*_Point;
+//Print("buy " + buyOnly + " propfirmmode " + propfirmMode + " stopbuystacking " + stopBuyStacking + " stopSelltacking " + stopSellStacking);
+   if(current.hour > 16 && current.min > 20 && iLow(_Symbol, PERIOD_D1, 0) < iLow(_Symbol, PERIOD_D1, 1) && discountSave == true && bullishGap == true && swingTrade == true && buyOnly == true && saveTimeBuyDaily != currentcandleDailyhr.day && current.day >= 1 && current.hour > 1)
+     {
+
+      saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_W1, 1), Ask+takeProfit*_Point, NULL);
+      buyOn = true;
+      stopBuyStacking=true;
+
+      // sellNow = false;
+      //   buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+      stopLoop = true;
+      //saveDiscount = false;
+      bullishGap = false;
+      discountSave=false;
+     }
+
+//Swing high
+   if(current.hour > 16 && current.min > 20 && iHigh(_Symbol, PERIOD_D1, 0) > iHigh(_Symbol, PERIOD_D1, 1) && premiumSave == true && PositionsTotal() < 1 && swingTrade == true && sellOnly == true && bearishGap && saveTimeSellDaily != currentcandleDailyhr.day && current.day >= 1 && current.hour > 1)
+     {
+
+      saveTimeSellDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask + 6000 * _Point, NULL);
+      trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_W1, 1), Ask-takeProfit*_Point, NULL);
+      sellOn = true;
+      stopLoop = true;
+      stopSellStacking=true;
+      //  premiumOn=false;
+      //   discountOn=false;
+      bearishGap = false;
+      premiumSave = false;
+
+      // buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+   if(0 == 1)
+     {
+      if(OrdersTotal() < 1 && intradayTrade == true && bullishOb == true && buyOnly == true && sellOnly == false && saveTimeBuyDailyob != currentcandleDailyhr.day && current.day >= 1 && (current.hour > 15 && current.hour < 19) && current.day > 1)
+        {
+         Print("step 1 ");
+         if(iClose(_Symbol, PERIOD_M15, 1) < iOpen(_Symbol, PERIOD_M15, 1))
+           {
+            saveTimeBuyDailyob = currentcandleDailyhr.day;
+            bullishOb == false;
+            // trade.BuyStop(0.9, iHigh(_Symbol, PERIOD_M15, 1), _Symbol, iLow(_Symbol, PERIOD_M15, 1), iHigh(_Symbol, PERIOD_M15, 1)+200*_Point, ORDER_TIME_DAY, 0, NULL);
+
+           }
+
+        }
+
+      if(OrdersTotal() < 1 && intradayTrade == true && bearishOb == true && buyOnly == false && sellOnly == true && saveTimeBuyDailyob != currentcandleDailyhr.day && current.day >= 1 && (current.hour > 15 && current.hour < 19) && current.day > 1)
+        {
+         Print("step 1 ");
+         if(iClose(_Symbol, PERIOD_M15, 1) > iOpen(_Symbol, PERIOD_M15, 1))
+           {
+            saveTimeBuyDailyob = currentcandleDailyhr.day;
+            bearishOb == false;
+            // trade.SellStop(0.9, iLow(_Symbol, PERIOD_M15, 1), _Symbol, iHigh(_Symbol, PERIOD_M15, 1), iLow(_Symbol, PERIOD_M15, 1)-200*_Point, ORDER_TIME_DAY, 0, NULL);
+
+           }
+
+        }
+
+     }
+// Daily entry using this one
+   saveLowest=iLowest(_Symbol, PERIOD_M5, MODE_LOW, 3, 0);
+   saveHighest=iHighest(_Symbol, PERIOD_M5, MODE_HIGH, 3, 0);
+   if(newYorkSession == true && PositionsTotal() < 1 && intradayTrade == true && bullishGap15 == true && buyOnly == true && sellOnly == true && current.day >= 1 && (current.hour > 16 && current.min > 45) && current.hour < 18 && current.day > 1)
+     {
+
+      saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      if((current.day == 10 || current.day == 11 || current.day == 16 || current.day == 17 || current.day == 19 || current.day == 20 || current.day == 22 || current.day == 23 || current.day == 25 || current.day == 26 || current.day == 28 || current.day == 29 || current.day == 31 || current.day == 1))
+        {
+         trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_M5, saveLowest)-1500*_Point,Ask+30000*_Point, NULL);
+
+        }
+      else
+        {
+         trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_M5, saveLowest)-1500*_Point,Ask+8000*_Point, NULL);
+
+        }
+      //trade.SellStop(lotSize, iLow(_Symbol, PERIOD_M5, saveLowest), _Symbol, iHigh(_Symbol, PERIOD_M5, saveHighest), Bid-takeProfit*_Point,ORDER_TIME_DAY,0,NULL);
+
+      buyOn = true;
+      stopBuyStacking=true;
+      bullishOb=true;
+      // sellNow = false;
+      //   buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+      stopLoop = true;
+      saveDiscount = false;
+      bullishGap15 = false;
+      discountSaveDaily=false;
+      bullishGap15 == false;
+     }
+
+//Daily sell
+   if(newYorkSession == true && PositionsTotal() < 1 && intradayTrade == true && sellOnly == true && buyOnly == true && bearishGap15 == true && current.day >= 1 && (current.hour > 16 && current.min > 45) && current.hour < 18 && current.day > 1)
+     {
+      bearishOb=true;
+      saveTimeSellDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask + 6000 * _Point, NULL);
+      if((current.day == 10 || current.day == 11 || current.day == 16 || current.day == 17 || current.day == 19 || current.day == 20 || current.day == 22 || current.day == 23 || current.day == 25 || current.day == 26 || current.day == 28 || current.day == 29 || current.day == 31 || current.day == 1))
+        {
+         trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_M5, saveHighest)+1500*_Point, Ask-30000*_Point, NULL);
+
+        }
+      else
+        {
+         trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_M5, saveHighest)+1500*_Point, Ask-8000*_Point, NULL);
+
+        }
+      // trade.BuyStop(lotSize, iHigh(_Symbol, PERIOD_M5, saveHighest), _Symbol, iLow(_Symbol, PERIOD_M5, saveLowest), Ask+takeProfit*_Point,ORDER_TIME_DAY,0,NULL);
+
+      sellOn = true;
+      stopLoop = true;
+      stopSellStacking=true;
+      savePremium=false;
+      //  premiumOn=false;
+      //   discountOn=false;
+      bearishGap15 = false;
+      premiumSaveDaily = false;
+
+
+      // buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+
+   if(newYorkSession == true && PositionsTotal() < 1 && intradayTrade == true && bullishGap15 == true && buyOnly == true && sellOnly == false && current.day >= 1 && (current.hour > 16 && current.min > 45) && current.hour < 19 && current.day > 1)
+     {
+
+      saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_M5, saveLowest)-1500*_Point,Ask+80000*_Point, NULL);
+      //trade.SellStop(lotSize, iLow(_Symbol, PERIOD_M5, saveLowest), _Symbol, iHigh(_Symbol, PERIOD_M5, saveHighest), Bid-takeProfit*_Point,ORDER_TIME_DAY,0,NULL);
+      trade.BuyStop(lotSize, iHigh(_Symbol, PERIOD_M5, saveHighest), _Symbol, iLow(_Symbol, PERIOD_M5, saveLowest), Ask+takeProfit*_Point,ORDER_TIME_DAY,0,NULL);
+
+      buyOn = true;
+      stopBuyStacking=true;
+      bullishOb=true;
+      // sellNow = false;
+      //   buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+      stopLoop = true;
+      saveDiscount = false;
+      bullishGap15 = false;
+      discountSaveDaily=false;
+      bullishGap15 == false;
+     }
+
+//Daily sell
+   if(newYorkSession == true && PositionsTotal() < 1 && intradayTrade == true && sellOnly == true && buyOnly == false && bearishGap15 == true && current.day >= 1 && (current.hour > 16 && current.min > 45) && current.hour < 19 && current.day > 1)
+     {
+      bearishOb=true;
+      saveTimeSellDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask + 6000 * _Point, NULL);
+      trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_M5, saveHighest)+1500*_Point, Ask-80000*_Point, NULL);
+      // trade.BuyStop(lotSize, iHigh(_Symbol, PERIOD_M5, saveHighest), _Symbol, iLow(_Symbol, PERIOD_M5, saveLowest), Ask+takeProfit*_Point,ORDER_TIME_DAY,0,NULL);
+
+      sellOn = true;
+      stopLoop = true;
+      stopSellStacking=true;
+      savePremium=false;
+      //  premiumOn=false;
+      //   discountOn=false;
+      bearishGap15 = false;
+      premiumSaveDaily = false;
+
+
+      // buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+
+// Daily london session entry using this one
+   saveLowestLondon=iLowest(_Symbol, PERIOD_M15, MODE_LOW, 12, 0);
+   saveHighestLondon=iHighest(_Symbol, PERIOD_M15, MODE_HIGH, 12, 0);
+   if(londonSession == true && PositionsTotal() < 1 && intradayTrade == true && bullishGap15 == true && buyOnly == true && sellOnly == true && current.day >= 1 && (current.hour > 10 && current.min > 45) && current.hour < 12 && current.day > 1)
+     {
+
+      saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_M15, saveLowestLondon)-1500*_Point,Ask+30000*_Point, NULL);
+      //  trade.SellStop(lotSize, iLow(_Symbol, PERIOD_M15, saveLowestLondon), _Symbol, iHigh(_Symbol, PERIOD_M15, saveHighestLondon), Bid-8000*_Point,ORDER_TIME_DAY,0,NULL);
+
+      buyOn = true;
+      stopBuyStacking=true;
+      bullishOb=true;
+      // sellNow = false;
+      //   buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+      stopLoop = true;
+      saveDiscount = false;
+      bullishGap15 = false;
+      discountSaveDaily=false;
+      bullishGap15 == false;
+     }
+
+//Daily sell
+   if(londonSession == true && PositionsTotal() < 1 && intradayTrade == true && sellOnly == true && buyOnly == true && bearishGap15 == true && current.day >= 1 && (current.hour > 10 && current.min > 45) && current.hour < 12 && current.day > 1)
+     {
+      bearishOb=true;
+      saveTimeSellDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+      // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask + 6000 * _Point, NULL);
+      trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_M15, saveHighestLondon)+1500*_Point, Ask-30000*_Point, NULL);
+      //  trade.BuyStop(lotSize, iHigh(_Symbol, PERIOD_M15, saveHighestLondon), _Symbol, iLow(_Symbol, PERIOD_M15, saveLowestLondon), Ask+8000*_Point,ORDER_TIME_DAY,0,NULL);
+
+      sellOn = true;
+      stopLoop = true;
+      stopSellStacking=true;
+      savePremium=false;
+      //  premiumOn=false;
+      //   discountOn=false;
+      bearishGap15 = false;
+      premiumSaveDaily = false;
+
+
+      // buyNow = true;
+      //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+     }
+
+//
+
+// Algo Enigma
+
+
+// Daily entry
+   if(0 == 1)
+     {
+
+      if(current.day_of_week >= 1 && current.day_of_week < 3)
+        {
+         if(saveGapMonth == "Bullish" && iLow(_Symbol, PERIOD_MN1, 0) > iLow(_Symbol, PERIOD_MN1, 1) && iLow(_Symbol, PERIOD_MN1, 1) < iLow(_Symbol, PERIOD_MN1, 2) && PositionsTotal() < 1 && intradayTrade == true && bullishGap15 == true && buyOnly == true && sellOnly == true && saveTimeBuyDaily != currentcandleDailyhr.day && current.day >= 1 && (current.hour > 15 && current.hour < 22))
+           {
+
+            saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+            saveTimeSellDaily = currentcandleDailyhr.day;
+            if(current.day_of_week == 4)
+              {
+               trade.Buy(lotSize, NULL, Ask, iLowest(_Symbol, PERIOD_M1, MODE_LOW, 10, 0),Ask+15000*_Point, NULL);
+              }
+            else
+              {
+               trade.Buy(lotSize, NULL, Ask, iLowest(_Symbol, PERIOD_M1, MODE_LOW, 10, 0),Ask+15000*_Point, NULL);
+
+              }
+            buyOn = true;
+            stopBuyStacking=true;
+
+            // sellNow = false;
+            //   buyNow = true;
+            //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+            stopLoop = true;
+            //saveDiscount = false;
+            bullishGap15 = false;
+            discountSaveDaily=false;
+           }
+
+         //Daily sell
+         if(saveGapMonth == "Bearish" && iHigh(_Symbol, PERIOD_MN1, 0) < iHigh(_Symbol, PERIOD_MN1, 1) && iHigh(_Symbol, PERIOD_MN1, 1) > iHigh(_Symbol, PERIOD_MN1, 2) && PositionsTotal() < 1 && intradayTrade == true && sellOnly == true && buyOnly == true && bearishGap15 == true && saveTimeSellDaily != currentcandleDailyhr.day && current.day >= 1 && (current.hour > 15 && current.hour < 22))
+           {
+
+            saveTimeSellDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+            saveTimeBuyDaily = currentcandleDailyhr.day; // Update saveTimeBuy first
+            // trade.Buy(0.3, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1), Ask + 6000 * _Point, NULL);
+            if(current.day_of_week == 4)
+              {
+               trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_MN1, 1), Ask-15000*_Point, NULL);
+
+              }
+            else
+              {
+               trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_MN1, 1), Ask-15000*_Point, NULL);
+
+              }
+            sellOn = true;
+            stopLoop = true;
+            stopSellStacking=true;
+            //  premiumOn=false;
+            //   discountOn=false;
+            bearishGap15 = false;
+            premiumSaveDaily = false;
+
+            // buyNow = true;
+            //Print("savetimesell " + saveTimeSell + " currencandle4hr " + currentcandle4hr.hour);
+
+           }
+        }
+
+     }
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void FindGaps()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandleDayhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDayhr);
+
+// Check for a bullish gap
+//Print("step 1 find gaps " + monthlyLowHit + " buynow " + buyNow + " " + + monthlyHighHit );
+   if(0 == 0 || 1 == 1)
+     {
+      if(iLow(_Symbol, PERIOD_D1, 1) > iHigh(_Symbol, PERIOD_D1, 3)+10*_Point && iHigh(_Symbol, PERIOD_D1, 1) > iLow(_Symbol, PERIOD_D1, 2) && saveTimeBuy != currentcandleDayhr.hour)
+        {
+         bullishGap = true;
+         bearishGap = false;
+         Print("Bullish Gap" + " / " + bullishGap);
+         monthlyLowHit=false;
+         bullishgaplow=iLow(_Symbol, PERIOD_D1, 2);
+         saveTimeBuy=currentcandleDayhr.hour;
+
+        }
+
+
+      if(iHigh(_Symbol, PERIOD_D1, 1) < iLow(_Symbol, PERIOD_D1, 3)-10*_Point && iLow(_Symbol, PERIOD_D1, 1) < iHigh(_Symbol, PERIOD_D1, 2) && saveTimeSell != currentcandleDayhr.hour)
+        {
+         bearishGap = true;
+         bullishGap = false;
+         Print("Bearish Gap " + bearishGap);
+         monthlyHighHit=false;
+         bearishgaphigh=iHigh(_Symbol, PERIOD_D1, 2);
+         saveTimeSell=currentcandleDayhr.hour;
+
+        }
+     }
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void sniperEntry()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandle4hr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandle4hr);
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+   if(current.day_of_week != 1 && saveTimeBuy != currentcandle4hr.hour && buyNow == true && bullishGap == true && current.day != 27)
+     {
+      //  trade.Buy(0.3, NULL, Ask, swingLowArray[0], Ask + 6000 * _Point, NULL);
+      buyNow = false;
+      sellNow = false;
+      bullishGap = false;
+      bearishGap = false;
+      saveTimeBuy = currentcandle4hr.hour;
+      // Print("Bullish Gap " + buyNow + " / " + bullishGap);
+     }
+
+   if(current.day_of_week != 1 && saveTimeSell != currentcandle4hr.hour && sellNow == true && bearishGap == true && current.day != 27)
+     {
+      // trade.Sell(0.3, NULL, Bid, swingHighArray[0], Bid - 6000 * _Point, NULL);
+      sellNow = false;
+      buyNow = false;
+      bullishGap = false;
+      bearishGap = false;
+      saveTimeSell = currentcandle4hr.hour;
+
+      Print("Bearish Gap " + sellNow + " / " + bearishGap);
+     }
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void IfGapNotValidScan()
+  {
+
+   if(iHigh(_Symbol, PERIOD_D1, 0) > bearishgaphigh)
+     {
+      bearishGap = false;
+      //Print("Bearish gap violated " + bearishGap + " / " + bearishgaphigh);
+     }
+
+   if(iLow(_Symbol, PERIOD_D1, 0) < bullishgaplow)
+     {
+      bullishGap = false;
+      //Print("Bullish gap violated" +  bullishGap + " / " + bullishgaplow);
+
+     }
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void closeTradesTPChanged()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+   double prevMonth1high = iHigh(_Symbol, PERIOD_MN1, 1)-600*_Point;
+   double prevMonth1low = iLow(_Symbol, PERIOD_MN1, 1)+600*_Point;
+
+//Print("Stoploop " + stopLoop + " current day " + current.day + " sellOn " + sellOn);
+   if(stopLoop == false && current.day > 1 && sellOn == true && iLow(_Symbol, PERIOD_MN1, 1) < iLow(_Symbol, PERIOD_MN1, 0))
+     {
+      //  CloseAllPositions();
+
+      sellOn=false;
+     }
+
+//Print("Stoploop " + stopLoop + " current day " + current.day + " buyOn " + buyOn);
+   if(stopLoop == false && swingTrade == false && current.day > 1 && buyOn == true && iHigh(_Symbol, PERIOD_MN1, 1) > iHigh(_Symbol, PERIOD_MN1, 0))
+     {
+      //  CloseAllPositions();
+
+      buyOn=false;
+     }
+
+   if(current.day >= 27 && current.day <= 29 && swingTrade == false)
+     {
+      stopLoop = false;
+     }
+
+   if((PositionSelect(Symbol()) == false) && swingTrade == false)
+     {
+      buyOn=false;
+      sellOn=false;
+     }
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void resetStack()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   if(current.hour == 1)
+     {
+      stopBuyStacking = false;
+      stopSellStacking = false;
+      initialBalance= AccountInfoDouble(ACCOUNT_EQUITY);
+      premiumOn=false;
+      discountOn=false;
+     }
+
+   if(current.day_of_week == 1)
+     {
+
+      //premiumOn=false;
+      // discountOn=false;
+     }
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CloseAllPositionsTwo()
+  {
+
+// Close all open positions
+   int positions = PositionsTotal();
+   for(int i=positions-1; i>=0; i--)
+     {
+      ulong ticket = PositionGetTicket(i);
+      trade.PositionClose(ticket,ULONG_MAX);
+      Print("Looped positions and closed " + i);
+     }
+
+// Cancel all pending orders
+   int orders = OrdersTotal();
+   for(int i=orders-1; i>=0; i--)
+     {
+      ulong ticket = OrderGetTicket(i);
+      trade.OrderDelete(ticket);
+      Print("Looped orders and closed " + i);
+
+     }
+
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void StopTradesWhenBalanceBelow()
+  {
+
+//Print("Account balans " + AccountInfoDouble(ACCOUNT_EQUITY));
+   if(AccountInfoDouble(ACCOUNT_EQUITY) >= targetProfit)
+     {
+      // CloseAllPositionsTwo();
+     }
+
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void StopTradingIfDailyLossExceeded()
+  {
+   if(AccountInfoDouble(ACCOUNT_EQUITY) < initialBalance-dailyLossLimit)
+     {
+      CloseAllPositionsTwo();
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void FindGapsFifteen()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandleDayhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDayhr);
+
+// Check for a bullish gap
+//Print("step 1 find gaps " + monthlyLowHit + " buynow " + buyNow + " " + + monthlyHighHit );
+   if(0 == 0 || 1 == 1)
+     {
+      if(newYorkSession == true && iHigh(_Symbol, PERIOD_M5, 1) > iHigh(_Symbol, PERIOD_M5, 2) && iLow(_Symbol, PERIOD_M5, 1) > iHigh(_Symbol, PERIOD_M5, 3)+100*_Point && iLow(_Symbol, PERIOD_M5, 3) < iLow(_Symbol, PERIOD_M5, 2) && saveTimeBuy15 != currentcandleDayhr.hour && (current.hour > 16 && current.min > 45))
+        {
+         bullishGap15 = true;
+         bearishGap15 = false;
+         Print("Bullish Gap 15" + " / " + bullishGap15);
+         monthlyLowHit=false;
+         bullishgaplow15=iLow(_Symbol, PERIOD_M15, 2);
+         saveTimeBuy15=currentcandleDayhr.hour;
+
+        }
+
+
+      if(newYorkSession == true && iLow(_Symbol, PERIOD_M5, 1) < iLow(_Symbol, PERIOD_M5, 2) && iHigh(_Symbol, PERIOD_M5, 1) < iLow(_Symbol, PERIOD_M5, 3)-100*_Point && iHigh(_Symbol, PERIOD_M5, 3) > iHigh(_Symbol, PERIOD_M5, 2) && saveTimeSell15 != currentcandleDayhr.hour && (current.hour > 16 && current.min > 45))
+        {
+         bearishGap15 = true;
+         bullishGap15 = false;
+         Print("Bearish Gap 15" + bearishGap);
+         monthlyHighHit=false;
+         bearishgaphigh15=iHigh(_Symbol, PERIOD_M15, 2);
+         saveTimeSell15=currentcandleDayhr.hour;
+
+        }
+
+
+      if(londonSession == true && iHigh(_Symbol, PERIOD_M5, 1) > iHigh(_Symbol, PERIOD_M5, 2) && iLow(_Symbol, PERIOD_M5, 1) > iHigh(_Symbol, PERIOD_M5, 3)+100*_Point && iLow(_Symbol, PERIOD_M5, 3) < iLow(_Symbol, PERIOD_M5, 2) && saveTimeBuy15 != currentcandleDayhr.hour && (current.hour > 10 && current.min > 45))
+        {
+         bullishGap15 = true;
+         bearishGap15 = false;
+         Print("Bullish Gap 15" + " / " + bullishGap15);
+         monthlyLowHit=false;
+         bullishgaplow15=iLow(_Symbol, PERIOD_M15, 2);
+         saveTimeBuy15=currentcandleDayhr.hour;
+
+        }
+
+
+      if(londonSession == true && iLow(_Symbol, PERIOD_M5, 1) < iLow(_Symbol, PERIOD_M5, 2) && iHigh(_Symbol, PERIOD_M5, 1) < iLow(_Symbol, PERIOD_M5, 3)-100*_Point && iHigh(_Symbol, PERIOD_M5, 3) > iHigh(_Symbol, PERIOD_M5, 2) && saveTimeSell15 != currentcandleDayhr.hour && (current.hour > 10 && current.min > 45))
+        {
+         bearishGap15 = true;
+         bullishGap15 = false;
+         Print("Bearish Gap 15" + bearishGap);
+         monthlyHighHit=false;
+         bearishgaphigh15=iHigh(_Symbol, PERIOD_M15, 2);
+         saveTimeSell15=currentcandleDayhr.hour;
+
+        }
+     }
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void FindGapshour()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandleDayhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDayhr);
+
+// Check for a bullish gap
+//Print("step 1 find gaps " + monthlyLowHit + " buynow " + buyNow + " " + + monthlyHighHit );
+   if(0 == 0 || 1 == 1)
+     {
+      if(iHigh(_Symbol, PERIOD_H1, 1) > iHigh(_Symbol, PERIOD_H1, 2) && iLow(_Symbol, PERIOD_H1, 1) > iHigh(_Symbol, PERIOD_H1, 3)+100*_Point && iLow(_Symbol, PERIOD_H1, 3) < iLow(_Symbol, PERIOD_H1, 2) && saveTimeBuyhour != currentcandleDayhr.hour && current.hour > 17)
+        {
+         bullishGaphour = true;
+         bearishGaphour = false;
+         Print("Bullish Gap hour" + " / " + bullishGaphour);
+         monthlyLowHit=false;
+         bullishgaplowhour=iLow(_Symbol, PERIOD_H1, 3);
+         gapEntryLevelHourBullish=iLow(_Symbol, PERIOD_H1, 1);
+         saveTimeBuyhour=currentcandleDayhr.hour;
+
+        }
+
+      if(iLow(_Symbol, PERIOD_H1, 1) < iLow(_Symbol, PERIOD_H1, 2) && iHigh(_Symbol, PERIOD_H1, 1) < iLow(_Symbol, PERIOD_H1, 3)-100*_Point && iHigh(_Symbol, PERIOD_H1, 3) > iHigh(_Symbol, PERIOD_H1, 2) && saveTimeSellhour != currentcandleDayhr.hour && current.hour > 17)
+        {
+         bearishGaphour = true;
+         bullishGaphour = false;
+         Print("Bearish Gap hour" + bearishGaphour);
+         monthlyHighHit=false;
+         bearishgaphighhour=iHigh(_Symbol, PERIOD_H1, 3);
+         saveTimeSellhour=currentcandleDayhr.hour;
+         gapEntryLevelHourBearish=iHigh(_Symbol, PERIOD_H1, 1);
+
+        }
+
+
+     }
+  }
+
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ModifyPositions()
+  {
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+//double SL=NormalizeDouble(Ask-150*_Point, _Digits);
+
+   for(int i = PositionsTotal()-1; i >= 0; i--)
+     {
+      string symbol=PositionGetSymbol(i);
+
+      if(_Symbol==symbol)
+        {
+         ulong PositionTicket=PositionGetInteger(POSITION_TICKET);
+
+         double PositionBuyPrice=PositionGetDouble(POSITION_PRICE_OPEN);
+
+
+         if(Ask > (PositionBuyPrice + 1000*_Point))
+
+           {
+            trade.PositionModify(PositionTicket, PositionBuyPrice,Ask+6000*_Point);
+           }
+
+         if(Bid < (PositionBuyPrice - 1000*_Point))
+
+           {
+            trade.PositionModify(PositionTicket, PositionBuyPrice,Bid-6000*_Point);
+           }
+        }
+
+     }
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Equilibrium()
+  {
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+//Monthly Equilibrium
+   datetime last_bar_time = iTime(_Symbol, PERIOD_MN1, 1);  // Get the time of the last Monthly bar
+   double high = iHigh(_Symbol, PERIOD_MN1, 1);  // Get the high of the last Monthly bar
+   double low = iLow(_Symbol, PERIOD_MN1, 1);  // Get the low of the last Monthly bar
+   double mid_level = (high + low) / 2;  // Calculate the mid-level price
+   double midprice_low = (mid_level + low) / 2; // Calculate the mid-price between the mid-level and low-level
+   double midprice_high = (high + mid_level) / 2; // Calculate the mid-price between the high-level and mid-level
+
+// Monthly Equilibrium
+   ObjectCreate(0, "MonthEquilibrium", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_COLOR, clrPurple);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_RAY_RIGHT, true);
+
+// Weekly Equilibrium
+   datetime last_bar_time_weekly = iTime(_Symbol, PERIOD_W1, 1);  // Get the time of the last Weekly bar
+   double highWeekly = iHigh(_Symbol, PERIOD_W1, 1);  // Get the high of the last Weekly bar
+   double lowWeekly = iLow(_Symbol, PERIOD_W1, 1);  // Get the low of the last Weekly bar
+   double mid_level_Weekly = (highWeekly + lowWeekly) / 2;  // Calculate the Weekly price
+   double midprice_low_Weekly = (mid_level_Weekly + lowWeekly) / 2; // Calculate the mid-price between the Weekly and low-level
+   double midprice_high_Weekly = (highWeekly + mid_level_Weekly) / 2; // Calculate the mid-price between the Weekly and mid-level
+
+
+// Weekly Equilibrium
+   ObjectCreate(0, "WeekEquilibrium", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level_Weekly);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_COLOR, clrYellow);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_RAY_RIGHT, true);
+
+   if(Ask < mid_level && Ask < mid_level_Weekly)
+     {
+      saveDiscount=true;
+
+     }
+
+   if(Bid > mid_level && Bid > mid_level_Weekly)
+     {
+      savePremium=true;
+
+     }
+
+// Daily Equilibrium
+   datetime last_bar_time_Daily = iTime(_Symbol, PERIOD_D1, 1);  // Get the time of the last Weekly bar
+   double highDaily = iHigh(_Symbol, PERIOD_D1, 1);  // Get the high of the last Weekly bar
+   double lowDaily = iLow(_Symbol, PERIOD_D1, 1);  // Get the low of the last Weekly bar
+   double mid_level_Daily = (highDaily + lowDaily) / 2;  // Calculate the Weekly price
+   double midprice_low_Daily = (mid_level_Daily + lowDaily) / 2; // Calculate the mid-price between the Weekly and low-level
+   double midprice_high_Daily = (highDaily + mid_level_Daily) / 2; // Calculate the mid-price between the Weekly and mid-level
+
+
+// Daily Equilibrium
+   ObjectCreate(0, "WeekEquilibrium3", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level_Daily);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_COLOR, clrWhite);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_RAY_RIGHT, true);
+
+
+// 4hr Liquidity zones
+   datetime last_bar_time_4hr = iTime(_Symbol, PERIOD_H4, 1);  // Get the time of the last bar
+   double high4hr = iHigh(_Symbol, PERIOD_H4, 1);  // Get the high of the last bar
+   double low4hr = iLow(_Symbol, PERIOD_H4, 1);  // Get the low of the last bar
+   double mid_level_4hr = (high4hr + low4hr) / 2;  // Calculate the price
+   double midprice_low_4hr = (mid_level_4hr + low4hr)/ 2; // Calculate the mid-price between the and low-level
+   double midprice_high_4hr = (high4hr + mid_level_4hr) / 2; // Calculate the mid-price between the and mid-level
+
+
+   if(0 == 1)
+     {
+      // 4 hour liquidity zones boxes low
+      ObjectCreate(0, "HighLineeBox4hr", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_low_4hr, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,low4hr);
+      ObjectSetInteger(0, "HighLineeBox4hr", OBJPROP_COLOR, clrWhite);
+      //ObjectSetInteger(0,"HighLineeBox4hr", OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "HighLineeBox4hr", OBJPROP_BACK, 150); // Set transparency level (0 to 255)
+
+      // 4 hour liquidity zones boxes high
+      ObjectCreate(0, "HighLineeBox4hrhigh", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_high_4hr, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,high4hr);
+      ObjectSetInteger(0, "HighLineeBox4hrhigh", OBJPROP_COLOR, clrWhite);
+      //ObjectSetInteger(0,"HighLineeBox4hrhigh", OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "HighLineeBox4hrhigh", OBJPROP_BACK, 20); // Set transparency level (0 to 255)
+     }
+// Daily Liquidity zones
+   datetime last_bar_time_Daily1 = iTime(_Symbol, PERIOD_D1, 1);  // Get the time of the last bar
+   double highDaily1 = iHigh(_Symbol, PERIOD_D1, 1);  // Get the high of the last bar
+   double lowDaily1 = iLow(_Symbol, PERIOD_D1, 1);  // Get the low of the last bar
+   double mid_level_Daily1 = (highDaily1 + lowDaily1) / 2;  // Calculate the price
+   double midprice_low_Daily1 = (mid_level_Daily1 + lowDaily1)/ 2; // Calculate the mid-price between the and low-level
+   double midprice_high_Daily1 = (highDaily1 + mid_level_Daily1) / 2; // Calculate the mid-price between the and mid-level
+
+
+   if(0 == 1)
+     {
+      // Daily liquidity zones boxes low
+      ObjectCreate(0, "Dailylow", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_low_Daily, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,lowDaily);
+      ObjectSetInteger(0, "Dailylow", OBJPROP_COLOR, clrYellow);
+      //ObjectSetInteger(0,"Dailylow", OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Dailylow", OBJPROP_BACK, 150); // Set transparency level (0 to 255)
+
+      // Daily liquidity zones boxes high
+      ObjectCreate(0, "Daily", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_high_Daily, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,highDaily);
+      ObjectSetInteger(0, "Daily", OBJPROP_COLOR, clrYellow);
+      //ObjectSetInteger(0,"Daily, OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Daily", OBJPROP_BACK, 20); // Set transparency level (0 to 255)
+     }
+
+// Weekly Liquidity zones
+   datetime last_bar_time_Weekly2 = iTime(_Symbol, PERIOD_W1, 1);  // Get the time of the last bar
+   double highWeekly2 = iHigh(_Symbol, PERIOD_W1, 1);  // Get the high of the last bar
+   double lowWeekly2 = iLow(_Symbol, PERIOD_W1, 1);  // Get the low of the last bar
+   double mid_level_Weekly2 = (highWeekly2 + lowWeekly2) / 2;  // Calculate the price
+   double midprice_low_Weekly2 = (mid_level_Weekly2 + lowWeekly2)/ 2; // Calculate the mid-price between the and low-level
+   double midprice_high_Weekly2 = (highWeekly2 + mid_level_Weekly2) / 2; // Calculate the mid-price between the and mid-level
+
+
+   if(0 == 1)
+     {
+      // Weekly liquidity zones boxes low
+      ObjectCreate(0, "Weeklylow", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_low_Weekly2, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,lowWeekly2);
+      ObjectSetInteger(0, "Weeklylow", OBJPROP_COLOR, clrDarkOrange);
+      //ObjectSetInteger(0,"Weeklylow", OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Dailylow", OBJPROP_BACK, 150); // Set transparency level (0 to 255)
+
+      // Weeklyliquidity zones boxes high
+      ObjectCreate(0, "Weekly", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_high_Weekly2, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,highWeekly2);
+      ObjectSetInteger(0, "Weekly", OBJPROP_COLOR, clrDarkOrange);
+      //ObjectSetInteger(0,"Daily, OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Weekly", OBJPROP_BACK, 20); // Set transparency level (0 to 255)
+     }
+
+// Monthly Liquidity zones
+   datetime last_bar_time_Monthly2 = iTime(_Symbol, PERIOD_MN1, 1);  // Get the time of the last bar
+   double highMonthly2 = iHigh(_Symbol, PERIOD_MN1, 1);  // Get the high of the last bar
+   double lowMonthly2 = iLow(_Symbol, PERIOD_MN1, 1);  // Get the low of the last bar
+   double mid_level_Monthly2 = (highMonthly2 + lowMonthly2) / 2;  // Calculate the price
+   double midprice_low_Monthly2 = (mid_level_Monthly2 + lowMonthly2)/ 2; // Calculate the mid-price between the and low-level
+   double midprice_high_Monthly2 = (highMonthly2 + mid_level_Monthly2) / 2; // Calculate the mid-price between the and mid-level
+
+
+   if(0 == 1)
+     {
+      // Monthly liquidity zones boxes low
+      ObjectCreate(0, "Monthly2low", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_low_Monthly2, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,lowMonthly2);
+      ObjectSetInteger(0, "Monthly2low", OBJPROP_COLOR, clrGreen);
+      //ObjectSetInteger(0,"Monthly2low", OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Monthly2low", OBJPROP_BACK, 150); // Set transparency level (0 to 255)
+
+      // MOnthlyliquidity zones boxes high
+      ObjectCreate(0, "Monthly2", OBJ_RECTANGLE, 0, iTime(_Symbol, PERIOD_M1, 1), midprice_high_Monthly2, TimeCurrent() + PeriodSeconds(PERIOD_D1) * 3,highMonthly2);
+      ObjectSetInteger(0, "Monthly2", OBJPROP_COLOR, clrGreen);
+      //ObjectSetInteger(0,"Monthly2, OBJPROP_FILL,clrBlue);
+      ObjectSetInteger(0, "Monthly2", OBJPROP_BACK, 20); // Set transparency level (0 to 255)
+     }
+
+   if(iHigh(_Symbol, PERIOD_M1, 0) > mid_level)
+     {
+      // Print("Monthly Premium");
+      premiumOn=true;
+
+     }
+
+   if(iLow(_Symbol, PERIOD_M1, 0) < mid_level)
+     {
+      //Print("Monthly Discount");
+      discountOn=true;
+     }
+
+   if(iHigh(_Symbol, PERIOD_M1, 0) > mid_level_Weekly)
+     {
+      //  Print("Weekly Premium");
+      premiumOnWeekly=true;
+
+     }
+
+   if(iLow(_Symbol, PERIOD_M1, 0) < mid_level_Weekly)
+     {
+      // Print("Weekly Discount");
+      discountOnWeekly=true;
+     }
+
+
+   if(iHigh(_Symbol, PERIOD_M1, 0) > mid_level_Daily1)
+     {
+      // Print("Daily Premium");
+      premiumOnDaily=true;
+
+     }
+
+   if(iLow(_Symbol, PERIOD_M1, 0) < mid_level_Daily1)
+     {
+      //  Print("Daily Discount");
+      discountOnDaily=true;
+     }
+
+
+
+//Saving discount between weekly and daily
+   if((PositionSelect(Symbol()) == false) && discountOnDaily==true && current.hour > 15)
+     {
+      discountSaveDaily = true;
+
+     }
+
+   if((PositionSelect(Symbol()) == false) && premiumOnDaily==true && current.hour > 15)
+     {
+
+      premiumSaveDaily = true;
+     }
+
+
+
+//Saving swing discount below weekly and monthly equilibrium
+
+   if((PositionSelect(Symbol()) == false) && discountOnWeekly==true)
+     {
+      discountSave = true;
+
+     }
+
+   if((PositionSelect(Symbol()) == false) && premiumOnWeekly==true)
+     {
+
+      premiumSave = true;
+     }
+
+
+
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void resetDayEquilibrium()
+  {
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   if(current.hour > 1 && current.hour < 15)
+     {
+      discountSaveDaily = false;
+      premiumSaveDaily = false;
+      premiumOnDaily=false;
+      discountOnDaily=false;
+      premiumSave = false;
+      discountSave-false;
+      premiumOnWeekly=false;
+      discountOnWeekly=false;
+      premiumOn=false;
+      discountOn=false;
+     }
+
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void SilverBullet()
+  {
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+   MqlDateTime current;
+   TimeToStruct(TimeCurrent(), current);
+
+   MqlDateTime currentcandleDayhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDayhr);
+   Print("ON NOW");
+// Check for a bullish gap
+//Print("step 1 find gaps " + monthlyLowHit + " buynow " + buyNow + " " + + monthlyHighHit );
+// Calculate the low of the bar 2 periods ago on a 5-minute chart
+   double low2BarsAgo = iLow(_Symbol, PERIOD_M5, 2);
+
+// Calculate the points difference
+   double pointsDifference = (Ask - low2BarsAgo) / _Point;
+
+   Print("Points difference: ", pointsDifference);
+   if(0 == 0 || 1 == 1)
+     {
+      if(iLow(_Symbol, PERIOD_M5, 1) > iHigh(_Symbol, PERIOD_M5, 3)+30*_Point && iHigh(_Symbol, PERIOD_M5, 1) > iLow(_Symbol, PERIOD_M5, 2) && saveTimeBuy5 != currentcandleDayhr.day && current.hour > 17)
+        {
+
+         Print("Bullish Gap Silver" + " / " + bullishGap);
+
+         bullishgaplow5=iLow(_Symbol, PERIOD_M5, 2);
+         saveTimeSell5=currentcandleDayhr.day;
+         saveTimeBuy5=currentcandleDayhr.day;
+         trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_M5, 2),iHigh(_Symbol, PERIOD_M5, 2), NULL);
+
+        }
+
+
+      if(iHigh(_Symbol, PERIOD_M5, 1) < iLow(_Symbol, PERIOD_M5, 3)-30*_Point && iLow(_Symbol, PERIOD_M5, 1) < iHigh(_Symbol, PERIOD_M5, 2) && saveTimeSell5 != currentcandleDayhr.day && current.hour > 17)
+        {
+
+         Print("Bearish Gap Silver " + bearishGap);
+
+         bearishgaphigh5=iHigh(_Symbol, PERIOD_M5, 2);
+         saveTimeSell5=currentcandleDayhr.day;
+         saveTimeBuy5=currentcandleDayhr.day;
+
+         trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_M5, 2), iLow(_Symbol, PERIOD_M5, 2), NULL);
+
+        }
+     }
+
+   if(current.hour > 21 && current.hour < 22)
+     {
+      CloseAllPositions();
+
+     }
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ScanMonthlyGaps()
+  {
+
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+
+   for(int i = 20; i > 0; i--)
+     {
+      Print(i);
+
+      if(iLow(_Symbol, PERIOD_MN1, i) > iHigh(_Symbol, PERIOD_MN1, i+2)+500*_Point && iHigh(_Symbol, PERIOD_MN1, i) > iLow(_Symbol, PERIOD_MN1, i+1))
+        {
+
+
+         saveGapMonth="Bullish";
+        }
+
+      if(iHigh(_Symbol, PERIOD_MN1, i) < iLow(_Symbol, PERIOD_MN1, i+2)-500*_Point && iLow(_Symbol, PERIOD_MN1, i) < iHigh(_Symbol, PERIOD_MN1, i+1))
+        {
+
+         saveGapMonth="Bearish";
+        }
+
+
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void scanLiquidityMarkets()
+  {
+   MqlDateTime currentnow;
+   TimeToStruct(TimeCurrent(), currentnow);
+   MqlDateTime current;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), current);
+
+   if(currentnow.hour < 7)
+     {
+      gbpusdLiquidityLow=false;
+      gbpusdLiquidityHigh=false;
+      eurusdLiquidityLow=false;
+      eurusdLiquidityHigh=false;
+      xauusdLiquidityLow=false;
+      xauusdLiquidityHigh=false;
+      us30LiquidityLow=false;
+      us30LiquidityHigh=false;
+      ustecLiquidityLow=false;
+      ustecLiquidityHigh=false;
+     }
+
+   if(current.hour == 12 && iLow("GBPUSD", PERIOD_H4, 0) < iLow("GBPUSD", PERIOD_D1, 1))
+     {
+
+      gbpusdLiquidityLow=true;
+      if(saveTimeBuyGbp != current.hour)
+        {
+         //SendNotification("GBPUSD LIQUIDITY HIGH HIT");
+         saveTimeBuyGbp!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iHigh("GBPUSD", PERIOD_H4, 0) > iHigh("GBPUSD", PERIOD_D1, 1))
+     {
+
+      gbpusdLiquidityHigh=true;
+      if(saveTimeBuyGbp != current.hour)
+        {
+         //SendNotification("GBPUSD LIQUIDITY HIGH HIT");
+         saveTimeBuyGbp!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iLow("EURUSD", PERIOD_H4, 0) < iLow("EURUSD", PERIOD_D1, 1))
+     {
+
+      eurusdLiquidityLow=true;
+      if(saveTimeBuyEur != current.hour)
+        {
+         //SendNotification("EURUSD LIQUIDITY HIGH HIT");
+         saveTimeBuyEur!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iHigh("EURUSD", PERIOD_H4, 0) > iHigh("EURUSD", PERIOD_D1, 1))
+     {
+
+      eurusdLiquidityHigh=true;
+      if(saveTimeBuyEur != current.hour)
+        {
+         //SendNotification("EURUSD LIQUIDITY HIGH HIT");
+         saveTimeBuyEur!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iLow("XAUUSD", PERIOD_H4, 0) < iLow("XAUUSD", PERIOD_D1, 1))
+     {
+
+      xauusdLiquidityLow=true;
+      if(saveTimeBuyXau != current.hour)
+        {
+         //SendNotification("XAU LIQUIDITY HIGH HIT");
+         saveTimeBuyXau!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iHigh("XAUUSD", PERIOD_H4, 0) > iHigh("XAUUSD", PERIOD_D1, 1))
+     {
+
+      xauusdLiquidityHigh=true;
+      xauusdLiquidityLow=true;
+      if(saveTimeBuyXau != current.hour)
+        {
+         //SendNotification("XAU LIQUIDITY HIGH HIT");
+         saveTimeBuyXau!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iLow("US30", PERIOD_H4, 0) < iLow("US30", PERIOD_D1, 1))
+     {
+
+      us30LiquidityLow=true;
+      if(saveTimeBuyuS30 != current.hour)
+        {
+         //SendNotification("US30 LIQUIDITY HIGH HIT");
+         saveTimeBuyuS30!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iHigh("US30", PERIOD_H4, 0) > iHigh("US30", PERIOD_D1, 1))
+     {
+
+      us30LiquidityHigh=true;
+      if(saveTimeBuyuS30 != current.hour)
+        {
+         //SendNotification("US30 LIQUIDITY HIGH HIT");
+         saveTimeBuyuS30!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iLow("USTEC", PERIOD_H4, 0) < iLow("USTEC", PERIOD_D1, 1))
+     {
+      ustecLiquidityLow=true;
+      if(saveTimeBuyUstec != current.hour)
+        {
+         //SendNotification("USTEC LIQUIDITY LOW HIT");
+         saveTimeBuyUstec!= current.hour;
+        }
+     }
+
+   if(current.hour == 12 && iHigh("USTEC", PERIOD_H4, 0) > iHigh("USTEC", PERIOD_D1, 1))
+     {
+
+      ustecLiquidityHigh=true;
+      if(saveTimeBuyUstec != current.hour)
+        {
+         //SendNotification("USTEC LIQUIDITY HIGH HIT");
+         saveTimeBuyUstec!= current.hour;
+        }
+     }
+
+   if(0==1)
+     {
+      Comment(
+         "Daily high hit " + "GBPUSD" + " " + gbpusdLiquidityHigh +
+         "\n" + "Daily low hit " + "GBPUSD" + " " + gbpusdLiquidityLow +
+         "\n" +
+         "Daily high hit " + "EURUSD" + " " + eurusdLiquidityHigh +
+         "\n" + "Daily low hit " + "EURUSD" + " " + eurusdLiquidityLow +
+         "\n" +
+         "Daily high hit " + "XAUUSD" + " " + xauusdLiquidityHigh +
+         "\n" + "Daily low hit " + "XAUUSD" + " " + xauusdLiquidityLow +
+         "\n" +
+         "Daily high hit " + "US30" + " " + us30LiquidityHigh +
+         "\n" + "Daily low hit " + "US30" + " " + us30LiquidityLow +
+         "\n" +
+         "Daily high hit " + "USTEC" + " " + ustecLiquidityHigh +
+         "\n" + "Daily low hit " + "USTEC" + " " + ustecLiquidityLow
+
+      );
+     }
+
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void LimitOrderBuy()
+  {
+   MqlDateTime currentnow;
+   TimeToStruct(TimeCurrent(), currentnow);
+   if(currentnow.hour < 2)
+     {
+      stoptrading=false;
+      // Comment("stopped");
+     }
+   if(currentnow.hour == 17 && currentnow.min == 45 && buyModeLimit == true)
+     {
+      saveLowestLimit = iLowest(_Symbol, PERIOD_H1, MODE_LOW, 3, 0);
+      saveHighestLimit = iHighest(_Symbol, PERIOD_H1, MODE_HIGH, 3, 0);
+     }
+
+   double mid_level = (iHigh(_Symbol, PERIOD_H1, saveHighestLimit) + iLow(_Symbol, PERIOD_H1, saveLowestLimit)) / 2;  // Calculate the mid-level price
+   double midprice_low = (mid_level + iLow(_Symbol, PERIOD_H1, saveLowestLimit)) / 2; // Calculate the mid-price between the mid-level and low-level
+   double midprice_high = (iHigh(_Symbol, PERIOD_H1, saveHighestLimit) + mid_level) / 2; // Calculate the mid-price between the high-level and mid-level
+
+   if((PositionSelect(Symbol()) == false) && stoptrading == false && buyModeLimit == true && currentnow.hour > 16 && currentnow.min < 17 && iHigh(_Symbol, PERIOD_M15, 1) > iHigh(_Symbol, PERIOD_H1, saveHighestLimit) && OrdersTotal() < 1)
+     {
+      // Comment("current hour " + currentnow.hour + " / stop" + stoptrading);
+      datetime expirationTime = TimeCurrent() + PeriodSeconds(PERIOD_D1) * 2;
+      stoptrading=true;
+      // trade.SellLimit(lotSize, mid_level, _Symbol, iHigh(_Symbol, PERIOD_H1, saveHighestLimit), mid_level - 15000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+      trade.BuyLimit(lotSize, mid_level, _Symbol, mid_level-25000*_Point, mid_level + 15000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void LimitOrderSell()
+  {
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+   double mid_levelsell = (iHigh(_Symbol, PERIOD_W1, 1) + iLow(_Symbol, PERIOD_W1, 1)) / 2;  // Calculate the mid-level price
+
+   MqlDateTime currentnow;
+   TimeToStruct(TimeCurrent(), currentnow);
+
+   double price = Ask;
+   int lastThreeDigits = int(price) % 1000;
+
+   Print("Last three digits: ", lastThreeDigits);
+
+   bool orderPlaced = false; // Flag to track if an order has been placed
+
+// Scans institutional price and sets to true
+   if((currentnow.hour > 14 && currentnow.min < 18 || currentnow.hour > 20 && currentnow.min < 23) && (lastThreeDigits > 800 && lastThreeDigits < 900) && !orderPlaced)
+     {
+      // Comment("Buy price after 1 hour gap" + lastThreeDigits);
+      institutionalPrice = true;
+      institutionalPriceNumber = lastThreeDigits;
+      orderPlaced = true; // Set the flag to true after placing the order
+     }
+
+   if((currentnow.hour > 14 && currentnow.min < 18 || currentnow.hour > 20 && currentnow.min < 23) && (lastThreeDigits > 500 && lastThreeDigits < 600) && !orderPlaced)
+     {
+      // Comment("Buy price after 1 hour gap" + lastThreeDigits);
+      institutionalPrice = true;
+      institutionalPriceNumber = lastThreeDigits;
+      orderPlaced = true; // Set the flag to true after placing the order
+     }
+
+   if((currentnow.hour > 14 && currentnow.min < 18 || currentnow.hour > 20 && currentnow.min < 23) && (lastThreeDigits > 200 && lastThreeDigits < 300) && !orderPlaced)
+     {
+      // Comment("Buy price after 1 hour gap" + lastThreeDigits);
+      institutionalPrice = true;
+      institutionalPriceNumber = lastThreeDigits;
+      orderPlaced = true; // Set the flag to true after placing the order
+     }
+
+   if((currentnow.hour > 14 && currentnow.min < 18 || currentnow.hour > 20 && currentnow.min < 23) && (lastThreeDigits > 001 && lastThreeDigits < 100) && !orderPlaced)
+     {
+      // Comment("Buy price after 1 hour gap" + lastThreeDigits);
+      institutionalPrice = true;
+      institutionalPriceNumber = lastThreeDigits;
+      orderPlaced = true; // Set the flag to true after placing the order
+     }
+
+   Print("inst price " + institutionalPrice + " = " + institutionalPriceNumber + " bullishgap? " + bullishGaphour + " bearishgap? " + bearishGaphour);
+
+   if(buyOn2 == true && institutionalPrice == true && saveTimeBuyhourLimit != currentnow.day)
+     {
+      // Comment("buy limit");
+
+      datetime expirationTime = TimeCurrent() + PeriodSeconds(PERIOD_D1) * 2;
+      if(iLow(_Symbol, PERIOD_D1,0) < iLow(_Symbol, PERIOD_D1,1))
+        {
+         if(gapEntryLevelHourBullish >= iOpen(_Symbol, PERIOD_H1, 0))
+           {
+            trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1),Bid+12000*_Point, NULL);
+            trade.BuyLimit(lotSize, gapEntryLevelHourBullish - 1500 * _Point, _Symbol, iLow(_Symbol, PERIOD_D1,1), Ask + 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+         else
+           {
+            trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_D1, 0),Bid+12000*_Point, NULL);
+            trade.BuyLimit(lotSize, gapEntryLevelHourBullish, _Symbol, iLow(_Symbol, PERIOD_D1,0), Ask + 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+
+        }
+      else
+        {
+         if(gapEntryLevelHourBullish >= iOpen(_Symbol, PERIOD_H1, 0))
+           {
+            trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1),Bid+12000*_Point, NULL);
+
+            trade.BuyLimit(lotSize, gapEntryLevelHourBullish - 1500 * _Point, _Symbol, iLow(_Symbol, PERIOD_D1,1), Ask + 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+         else
+           {
+            trade.Buy(lotSize, NULL, Ask, iLow(_Symbol, PERIOD_D1, 1),Bid+12000*_Point, NULL);
+            trade.BuyLimit(lotSize, gapEntryLevelHourBullish, _Symbol, iLow(_Symbol, PERIOD_D1,1), Ask + 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+
+        }
+
+
+      bullishGaphour = false;
+      institutionalPrice = false;
+      saveTimeBuyhourLimit = currentnow.day;
+     }
+
+   if(sellOn2 == true && Bid <= mid_levelsell && institutionalPrice == true && saveTimeSellhourLimit != currentnow.day)
+     {
+      // Comment("sell limit");
+      datetime expirationTime = TimeCurrent() + PeriodSeconds(PERIOD_D1) * 2;
+
+      if(iHigh(_Symbol, PERIOD_D1,0) > iHigh(_Symbol, PERIOD_D1,1))
+        {
+         if(gapEntryLevelHourBearish <= iOpen(_Symbol, PERIOD_H1, 0))
+           {
+            trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1),Bid-12000*_Point, NULL);
+
+            trade.SellLimit(lotSize, gapEntryLevelHourBearish - 1500 * _Point, _Symbol, iHigh(_Symbol, PERIOD_D1,1), Bid - 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+         else
+           {
+            trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1),Bid-12000*_Point, NULL);
+
+            trade.SellLimit(lotSize, gapEntryLevelHourBearish, _Symbol, iHigh(_Symbol, PERIOD_D1,1), Bid - 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+
+        }
+      else
+        {
+         if(gapEntryLevelHourBearish <= iOpen(_Symbol, PERIOD_H1, 0))
+           {
+            trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1),Bid-12000*_Point, NULL);
+
+            trade.SellLimit(lotSize, gapEntryLevelHourBearish - 1500 * _Point, _Symbol, iHigh(_Symbol, PERIOD_D1,1), Bid - 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+         else
+           {
+            trade.Sell(lotSize, NULL, Bid, iHigh(_Symbol, PERIOD_D1, 1),Bid-12000*_Point, NULL);
+
+            trade.SellLimit(lotSize, gapEntryLevelHourBearish, _Symbol, iHigh(_Symbol, PERIOD_D1,1), Bid - 120000 * _Point, ORDER_TIME_SPECIFIED, expirationTime, NULL);
+           }
+
+        }
+
+
+      bearishGaphour = false;
+      institutionalPrice = false;
+      saveTimeSellhourLimit = currentnow.day;
+     }
+
+   if(currentnow.hour > 1 && currentnow.hour < 3)
+     {
+      // Reset the orderPlaced flag when conditions are not met
+      orderPlaced = false;
+      institutionalPriceNumber = 0;
+     }
+  }
+
+
+
+//if (currentnow.hour == 17 && currentnow.hour == 45 && sellModeLimit == true) {
+//    saveLowestLimitSell = iLowest(_Symbol, PERIOD_H4, MODE_LOW, 3, 0);
+//    saveHighestLimitSell = iHighest(_Symbol, PERIOD_H4, MODE_HIGH, 3, 0);
+
+//  }
+
+
+// double midprice_lowsell = (mid_levelsell + iLow(_Symbol, PERIOD_H4, saveLowestLimitSell)) / 2; // Calculate the mid-price between the mid-level and low-level
+// double midprice_highsell = (iHigh(_Symbol, PERIOD_H4, saveHighestLimitSell) + mid_levelsell) / 2; // Calculate the mid-price between the high-level and mid-level
+
+// if (stoptrading == false && sellModeLimit == true && currentnow.hour > 16 && currentnow.min < 17 && iLow(_Symbol, PERIOD_M15, 1) < iLow(_Symbol, PERIOD_H4, saveLowestLimitSell) && OrdersTotal() < 1 && (PositionSelect(Symbol()) == false)) {
+// Comment("current hour " + currentnow.hour + " / stop " + stoptrading );
+//  datetime expirationTime = TimeCurrent() + PeriodSeconds(PERIOD_D1) * 2;
+
+// }
+
+
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CheckBias()
+  {
+
+   MqlDateTime currentnow;
+   TimeToStruct(TimeCurrent(), currentnow);
+
+   if(currentnow.day > 1 && (currentnow.hour > 1 && currentnow.hour < 3))
+
+     {
+      for(int i=0; i < 13; i++)
+        {
+
+         if(iLow(_Symbol, PERIOD_D1, i+1) > iHigh(_Symbol, PERIOD_D1, i+3)+3500*_Point)
+           {
+
+            monthlyBias="Bullish";
+            break;
+           }
+
+         if(iHigh(_Symbol, PERIOD_D1, i+1) < iLow(_Symbol, PERIOD_D1, i+3)-3500*_Point)
+           {
+
+            monthlyBias="Bearish";
+            break;
+           }
+
+
+        }
+     }
+
+   if(currentnow.day>13)
+     {
+      //  Comment(monthlyBias + " monthlybias");
+      Print(monthlyBias + " monthlybias");
+     }
+
+
+
+   if(0==0)
+     {
+
+      for(int i=0; i < 13; i++)
+        {
+
+         if(iLow(_Symbol, PERIOD_H4, i+1) > iHigh(_Symbol, PERIOD_H4, i+3)+100*_Point)
+           {
+
+            intradayBias="Bullish4hr";
+            break;
+           }
+
+         if(iHigh(_Symbol, PERIOD_H4, i+1) < iLow(_Symbol, PERIOD_H4, i+3)-100*_Point)
+           {
+
+            intradayBias="Bearish4hr";
+            break;
+           }
+
+        }
+     }
+
+//swing bos analysis 4hr
+
+   Print(intradayBias + " intraday bias");
+
+   if(0==0)
+     {
+
+      for(int i=0; i < 13; i++)
+        {
+
+         if(iLow(_Symbol, PERIOD_H1, i+1) > iHigh(_Symbol, PERIOD_H1, i+3)+100*_Point)
+           {
+
+            sessionBias="Bullish1hr";
+            break;
+           }
+
+         if(iHigh(_Symbol, PERIOD_H1, i+1) < iLow(_Symbol, PERIOD_H1, i+3)-100*_Point)
+           {
+
+            sessionBias="Bearish1hr";
+            break;
+           }
+
+        }
+     }
+   Print(sessionBias + " session bias");
+
+//swing bos analysis 4hr
+
+   if(0==0)
+     {
+
+      for(int i=0; i < 13; i++)
+        {
+
+         if(iLow(_Symbol, PERIOD_H4, i+1) > iLow(_Symbol, PERIOD_H4, i+2) && iLow(_Symbol, PERIOD_H4, i+2) < iLow(_Symbol, PERIOD_H4, i+3))
+           {
+
+            fourhrSwing="Bullishswing";
+            lowValue=iLow(_Symbol, PERIOD_H4, i+2);
+
+            for(int i=0; i < 13; i++)
+              {
+
+
+              }
+
+            break;
+           }
+
+         if(iHigh(_Symbol, PERIOD_H4, i+1) < iHigh(_Symbol, PERIOD_H4, i+2) && iHigh(_Symbol, PERIOD_H4, i+2) > iHigh(_Symbol, PERIOD_H4, i+3))
+           {
+
+            fourhrSwing="Bearishswing";
+            highValue=iHigh(_Symbol, PERIOD_H4, i+2);
+            break;
+           }
+
+        }
+     }
+   Print(fourhrSwing + " swing created" + " swingHigh " + highValue + " swingLow " + lowValue);
+
+
+//swing bos analysis 1hr
+
+   if(0==0)
+     {
+
+      for(int i=0; i < 13; i++)
+        {
+
+         if(iLow(_Symbol, PERIOD_H1, i+1) > iLow(_Symbol, PERIOD_H1, i+2) && iLow(_Symbol, PERIOD_H1, i+2) < iLow(_Symbol, PERIOD_H1, i+3))
+           {
+
+            onehrSwing="Bullishswing";
+            lowValueOne=iLow(_Symbol, PERIOD_H1, i+2);
+
+            break;
+           }
+
+         if(iHigh(_Symbol, PERIOD_H1, i+1) < iHigh(_Symbol, PERIOD_H1, i+2) && iHigh(_Symbol, PERIOD_H1, i+2) > iHigh(_Symbol, PERIOD_H1, i+3))
+           {
+
+            onehrSwing="Bearishswing";
+            highValueOne=iHigh(_Symbol, PERIOD_H1, i+2);
+            break;
+           }
+
+        }
+     }
+   Print(onehrSwing + " swing created" + " swingHigh " + highValueOne + " swingLow " + lowValueOne);
+
+
+  }
+//+------------------------------------------------------------------+
