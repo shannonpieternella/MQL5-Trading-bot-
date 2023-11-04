@@ -1,0 +1,210 @@
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class Gaps
+  {
+private:
+   string            name;
+   int               age;
+   string            quarterlyHour;
+   double            currentcandleDayhr;
+   double            saveTimeSell15;
+   double            bearishgaphigh15;
+   double            saveTimeBuy15;
+   double            bearishGap15;
+   double            bullishGap15;
+   double            bullishgaplow15;
+   double            bearishGap;
+   double            saveLowest;
+   string            intradayBias;
+   double            saveGapPOIHigh;
+   double            saveGapPOILow;
+   int               saveNumberLoop;
+   datetime          saveTimeLoop;
+   double            saveGapPOIHigh2;
+   double            saveGapPOILow2;
+   int               saveNumberLoop2;
+   datetime          saveTimeLoop2;
+   bool              stopLoop;
+
+public:
+                     Gaps(string _name, int _age, bool stopLoop)
+     {
+      name = _name;
+      age = _age;
+      stopLoop = false;
+     }
+
+   string            GetGap()
+     {
+      UpdateDaily();
+      return intradayBias;
+     }
+
+private:
+   void              UpdateDaily()
+     {
+      MqlDateTime current;
+      TimeToStruct(TimeCurrent(), current);
+
+      // Controleer of het huidige uur 16 (4 uur 's middags) is
+      if(current.hour == 10)
+        {
+         // Loop door een reeks historische prijsstaven op het M30-tijdsbestek (elke 30 minuten)
+         for(int i = 100; i > 0; i--)
+           {
+
+            // Controleer of er een prijskloof (gap) is tussen iLow op de huidige staaf en iHigh op de vorige staaf
+            // waarbij de kloof groter is dan 100 keer de minimale prijsverandering (_Point)
+            if(iLow(_Symbol, PERIOD_M30, i - 3) > iHigh(_Symbol, PERIOD_M30, i - 1) + 100 * _Point)
+              {
+               // Als de kloofvoorwaarde is voldaan, worden enkele waarden vastgelegd
+               saveGapPOIHigh = iHigh(_Symbol, PERIOD_M30, i - 1);
+               saveGapPOILow = iLow(_Symbol, PERIOD_M30, i - 3);
+               saveNumberLoop = i-3;
+               saveTimeLoop = iTime(_Symbol, PERIOD_M30, i-3);
+
+               // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
+
+               // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
+
+               // Geef wat informatie weer in de MetaTrader-logboeken
+               Print("start numberloop" + saveNumberLoop);
+               bool createArrow = false; // Initialize the flag
+
+               // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
+               for(int x = saveNumberLoop; x > 0; x--)
+                 {
+
+                  Print("Savenumberloop " + saveNumberLoop + " ilow < " + iLow(_Symbol, PERIOD_M30, x) + " < " + saveGapPOILow);
+                  // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
+                  if(iLow(_Symbol, PERIOD_M30, x) < saveGapPOILow)
+                    {
+                     ObjectCreate(0, "arr ob" + i, OBJ_ARROW,0,saveTimeLoop,saveGapPOILow);
+                     ObjectSetInteger(0, "arr ob" + i, OBJPROP_COLOR, clrBlue);
+                     ObjectSetInteger(0, "arr ob" + i, OBJPROP_BACK, true);
+                     ObjectSetInteger(0, "arr ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+                     ObjectCreate(0, "arr ob 2" + i, OBJ_ARROW_DOWN,0,iTime(_Symbol, PERIOD_M30, x),iLow(_Symbol, PERIOD_M30, x));
+                     ObjectSetInteger(0, "arr ob 2" + i, OBJPROP_COLOR, clrYellow);
+                     ObjectSetInteger(0, "arr ob 2" + i, OBJPROP_BACK, true);
+                     ObjectSetInteger(0, "arr ob 2" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                     //stopLoop = true;
+                     // createArrow = true; // Set the flag to prevent the rectangle from being created
+                     break;
+
+                    }
+                  else
+                     if(iLow(_Symbol, PERIOD_M30, x) > saveGapPOILow && x <= 1)
+                       {
+
+                        ObjectCreate(0, "weekly ob" + i, OBJ_RECTANGLE, 0, saveTimeLoop, saveGapPOIHigh, iTime(_Symbol, PERIOD_M30, 0), saveGapPOILow);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_COLOR, clrPink);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                        //stopLoop = true;
+
+                        // Als aan de voorwaarde is voldaan, wordt er een rechthoekig object op de grafiek gecreëerd
+
+                       }
+                 }
+              }
+
+           }
+        }
+      else
+         if(current.day_of_week == 1 && current.hour == 2)
+           {
+            for(int i = 100; i > 0; i--)
+              {
+              // ObjectDelete(0,"weekly ob" + i);
+              // ObjectDelete(0,"arr ob 2" + i);
+              // ObjectDelete(0,"arr ob" + i);
+              }
+           }
+           
+           // bearishgap
+           
+            // Controleer of het huidige uur 16 (4 uur 's middags) is
+      if(current.hour == 10)
+        {
+         // Loop door een reeks historische prijsstaven op het M30-tijdsbestek (elke 30 minuten)
+         for(int i = 100; i > 0; i--)
+           {
+
+            // Controleer of er een prijskloof (gap) is tussen iLow op de huidige staaf en iHigh op de vorige staaf
+            // waarbij de kloof groter is dan 100 keer de minimale prijsverandering (_Point)
+            if(iHigh(_Symbol, PERIOD_M30, i - 3) < iLow(_Symbol, PERIOD_M30, i - 1) - 100 * _Point)
+              {
+               // Als de kloofvoorwaarde is voldaan, worden enkele waarden vastgelegd
+               saveGapPOIHigh2 = iHigh(_Symbol, PERIOD_M30, i - 3);
+               saveGapPOILow2 = iLow(_Symbol, PERIOD_M30, i - 1);
+               saveNumberLoop2 = i-3;
+               saveTimeLoop2 = iTime(_Symbol, PERIOD_M30, i-3);
+
+               // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
+
+               // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
+
+               // Geef wat informatie weer in de MetaTrader-logboeken
+               Print("start numberloop" + saveNumberLoop2);
+               bool createArrow = false; // Initialize the flag
+
+               // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
+               for(int s = saveNumberLoop2; s > 0; s--)
+                 {
+
+                  Print("Savenumberloop " + saveNumberLoop2 + " ilow < " + iLow(_Symbol, PERIOD_M30, s) + " < " + saveGapPOILow);
+                  // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
+                  if(iHigh(_Symbol, PERIOD_M30, s) > saveGapPOIHigh2)
+                    {
+                     ObjectCreate(0, "arr ob3" + s, OBJ_ARROW,0,saveTimeLoop2,saveGapPOIHigh2);
+                     ObjectSetInteger(0, "arr ob3" + s, OBJPROP_COLOR, clrRed);
+                     ObjectSetInteger(0, "arr ob3" + s, OBJPROP_BACK, true);
+                     ObjectSetInteger(0, "arr ob3" + s, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+                     ObjectCreate(0, "arr ob 23" + s, OBJ_ARROW_DOWN,0,iTime(_Symbol, PERIOD_M30, s),iHigh(_Symbol, PERIOD_M30, s));
+                     ObjectSetInteger(0, "arr ob 23" + s, OBJPROP_COLOR, clrPurple);
+                     ObjectSetInteger(0, "arr ob 23" + s, OBJPROP_BACK, true);
+                     ObjectSetInteger(0, "arr ob 23" + s, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                     //stopLoop = true;
+                     // createArrow = true; // Set the flag to prevent the rectangle from being created
+                     break;
+
+                    }
+                  else
+                     if(iHigh(_Symbol, PERIOD_M30, s) < saveGapPOIHigh2 && s <= 1)
+                       {
+
+                        ObjectCreate(0, "weekly ob3" + s, OBJ_RECTANGLE, 0, saveTimeLoop2, saveGapPOILow2, iTime(_Symbol, PERIOD_M30, 0), saveGapPOIHigh2);
+                        ObjectSetInteger(0, "weekly ob3" + s, OBJPROP_COLOR, clrOrangeRed);
+                        ObjectSetInteger(0, "weekly ob3" + s, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "weekly ob3" +s, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                        //stopLoop = true;
+
+                        // Als aan de voorwaarde is voldaan, wordt er een rechthoekig object op de grafiek gecreëerd
+
+                       }
+                 }
+              }
+
+           }
+        }
+      else
+         if(current.day_of_week == 1 && current.hour == 2)
+           {
+            for(int i = 100; i > 0; i--)
+              {
+               ObjectDelete(0,"weekly ob3" + i);
+               ObjectDelete(0,"arr ob 23" + i);
+               ObjectDelete(0,"arr ob3" + i);
+              }
+           }
+           
+           
+           
+     }
+
+
+  };
+//+------------------------------------------------------------------+
