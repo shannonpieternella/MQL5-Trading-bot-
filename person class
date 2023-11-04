@@ -1,0 +1,59 @@
+// Person.mqh
+class WeekQuarters
+{
+private:
+    string name;
+    int age;
+    string week;
+
+public:
+    // Constructor
+    WeekQuarters(string _name, int _age)
+    {
+        name = _name;
+        age = _age;
+    }
+
+    // Getter for the week property
+    string GetWeek()
+    {
+        UpdateWeek(); // Update the week property each time it's accessed
+        return week;
+    }
+
+private:
+    // Update the week property based on the current date
+    void UpdateWeek()
+    {
+        MqlDateTime currentnow;
+        TimeToStruct(TimeCurrent(), currentnow);
+
+        int weekOfMonth;
+        if (currentnow.day >= 1 && currentnow.day <= 7)
+            weekOfMonth = 1;
+        else if (currentnow.day >= 8 && currentnow.day <= 14)
+            weekOfMonth = 2;
+        else if (currentnow.day >= 15 && currentnow.day <= 21)
+            weekOfMonth = 3;
+        else
+            weekOfMonth = 4;
+
+        switch (weekOfMonth)
+        {
+            case 1:
+                week = "Week 1 - Accumulation week";
+                break;
+            case 2:
+                week = "Week 2 - Manipulation week";
+                break;
+            case 3:
+                week = "Week 3 - Distribution week";
+                break;
+            case 4:
+                week = "Week 4 - Continuation/Reversal Week";
+                break;
+            default:
+                week = "Invalid week";
+        }
+    }
+};
