@@ -1,0 +1,96 @@
+// Define the array size for saveLowestAndHigh
+#define ARRAY_SIZE 4 // Adjust the size as needed
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class Quarterlydailycycles
+  {
+private:
+   string            name;
+   int               age;
+   string            quarterlyHour;
+   double               saveLowest;
+   double            saveHighest;
+   double            sessionName;
+
+public:
+   // Constructor
+                     Quarterlydailycycles(string _name, int _age)
+     {
+      name = _name;
+      age = _age;
+     }
+
+   // Getter for the daily property
+   double            GetDaily()
+     {
+      UpdateDaily(); // update function when calling
+      return saveLowest;
+     }
+
+   double            GetHighest()
+     {
+      UpdateDaily(); // update function when calling
+      return saveHighest;
+     }
+     
+        double            GetSessionName()
+     {
+      UpdateDaily(); // update function when calling
+      return sessionName;
+     }
+
+
+private:
+   void              UpdateDaily()
+     {
+      MqlDateTime currentnow;
+      TimeToStruct(TimeCurrent(), currentnow);
+
+      // 1 uur verder is MQL5 server
+      if(currentnow.hour == 5)
+        {
+         saveLowest = iLow(_Symbol, PERIOD_M15, iLowest(_Symbol, PERIOD_M15, MODE_LOW, 14, 0));
+         saveHighest = iHigh(_Symbol, PERIOD_M15, iHighest(_Symbol, PERIOD_M15, MODE_HIGH, 14, 0));
+         sessionName = "Accumalation Session";
+         ObjectCreate(0, "Accumalation Session", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_M15,13), saveHighest, iTime(_Symbol,PERIOD_M15,0), saveLowest);
+         ObjectSetInteger(0, "Accumalation Session", OBJPROP_COLOR, clrYellow);
+         ObjectSetInteger(0, "Accumalation Session", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "Accumalation Session", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        if(currentnow.hour == 11)
+        {
+         saveLowest = iLow(_Symbol, PERIOD_M15, iLowest(_Symbol, PERIOD_M15, MODE_LOW, 14, 0));
+         saveHighest = iHigh(_Symbol, PERIOD_M15, iHighest(_Symbol, PERIOD_M15, MODE_HIGH, 14, 0));
+         sessionName = "Manipulation Session";
+         
+         ObjectCreate(0, "Manipulation Session", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_M15,13), saveHighest, iTime(_Symbol,PERIOD_M15,0), saveLowest);
+         ObjectSetInteger(0, "Manipulation Session", OBJPROP_COLOR, clrBlue);
+         ObjectSetInteger(0, "Manipulation Session", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "Manipulation Session", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        if(currentnow.hour == 17)
+        {
+         saveLowest = iLow(_Symbol, PERIOD_M15, iLowest(_Symbol, PERIOD_M15, MODE_LOW, 14, 0));
+         saveHighest = iHigh(_Symbol, PERIOD_M15, iHighest(_Symbol, PERIOD_M15, MODE_HIGH, 14, 0));
+         sessionName = "Continuation/Reversal Sniper";
+         
+         ObjectCreate(0, "Continuation/Reversal Sniper", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_M15,13), saveHighest, iTime(_Symbol,PERIOD_M15,0), saveLowest);
+         ObjectSetInteger(0, "Continuation/Reversal Sniper", OBJPROP_COLOR, clrRed);
+         ObjectSetInteger(0, "Continuation/Reversal Sniper", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "Continuation/Reversal Sniper", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        
+        
+
+
+     }
+  };
+//+------------------------------------------------------------------+
