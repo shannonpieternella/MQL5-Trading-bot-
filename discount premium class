@@ -1,0 +1,109 @@
+// Define the array size for saveLowestAndHigh
+#define ARRAY_SIZE 4 // Adjust the size as needed
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class DiscountPremium
+  {
+private:
+   string            name;
+   int               age;
+   string            quarterlyHour;
+   double               saveLowest;
+   double            saveHighest;
+   double            sessionName;
+    double            mid_level;
+   double            mid_level_Weekly;
+   double            mid_level_Daily;
+public:
+   // Constructor
+                     DiscountPremium(string _name, int _age)
+     {
+      name = _name;
+      age = _age;
+     }
+
+   // Getter for the daily property
+   double            GetMidLevelMonth()
+     {
+      UpdateDaily(); // update function when calling
+      return mid_level;
+     }
+
+   double            GetMidLevelWeekly()
+     {
+      UpdateDaily(); // update function when calling
+      return mid_level_Weekly;
+     }
+     
+        double            GetMidLevelDaily()
+     {
+      UpdateDaily(); // update function when calling
+      return mid_level_Daily;
+     }
+
+
+private:
+   void              UpdateDaily()
+     {
+      MqlDateTime currentnow;
+      TimeToStruct(TimeCurrent(), currentnow);
+
+      // 1 uur verder is MQL5 server
+      if(0 == 1)
+        {
+         
+         //Monthly Equilibrium
+   datetime last_bar_time = iTime(_Symbol, PERIOD_MN1, 1);  // Get the time of the last Monthly bar
+   double high = iHigh(_Symbol, PERIOD_MN1, 1);  // Get the high of the last Monthly bar
+   double low = iLow(_Symbol, PERIOD_MN1, 1);  // Get the low of the last Monthly bar
+   double mid_level = (high + low) / 2;  // Calculate the mid-level price
+   double midprice_low = (mid_level + low) / 2; // Calculate the mid-price between the mid-level and low-level
+   double midprice_high = (high + mid_level) / 2; // Calculate the mid-price between the high-level and mid-level
+
+// Monthly Equilibrium
+   ObjectCreate(0, "MonthEquilibrium", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_COLOR, clrPurple);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "MonthEquilibrium", OBJPROP_RAY_RIGHT, true);
+
+// Weekly Equilibrium
+   datetime last_bar_time_weekly = iTime(_Symbol, PERIOD_W1, 1);  // Get the time of the last Weekly bar
+   double highWeekly = iHigh(_Symbol, PERIOD_W1, 1);  // Get the high of the last Weekly bar
+   double lowWeekly = iLow(_Symbol, PERIOD_W1, 1);  // Get the low of the last Weekly bar
+   double mid_level_Weekly = (highWeekly + lowWeekly) / 2;  // Calculate the Weekly price
+   double midprice_low_Weekly = (mid_level_Weekly + lowWeekly) / 2; // Calculate the mid-price between the Weekly and low-level
+   double midprice_high_Weekly = (highWeekly + mid_level_Weekly) / 2; // Calculate the mid-price between the Weekly and mid-level
+
+
+// Weekly Equilibrium
+   ObjectCreate(0, "WeekEquilibrium", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level_Weekly);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_COLOR, clrYellow);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "WeekEquilibrium", OBJPROP_RAY_RIGHT, true);
+         
+      // Daily Equilibrium
+   datetime last_bar_time_Daily = iTime(_Symbol, PERIOD_D1, 1);  // Get the time of the last Weekly bar
+   double highDaily = iHigh(_Symbol, PERIOD_D1, 1);  // Get the high of the last Weekly bar
+   double lowDaily = iLow(_Symbol, PERIOD_D1, 1);  // Get the low of the last Weekly bar
+   double mid_level_Daily = (highDaily + lowDaily) / 2;  // Calculate the Weekly price
+   double midprice_low_Daily = (mid_level_Daily + lowDaily) / 2; // Calculate the mid-price between the Weekly and low-level
+   double midprice_high_Daily = (highDaily + mid_level_Daily) / 2; // Calculate the mid-price between the Weekly and mid-level
+
+
+// Daily Equilibrium
+   ObjectCreate(0, "WeekEquilibrium3", OBJ_HLINE, 0, iTime(_Symbol, PERIOD_M1, 1), mid_level_Daily);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_COLOR, clrWhite);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, "WeekEquilibrium3", OBJPROP_RAY_RIGHT, true);
+   
+        }
+        
+        
+        
+
+
+     }
+  };
+//+------------------------------------------------------------------+
