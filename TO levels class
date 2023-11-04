@@ -1,0 +1,157 @@
+// Define the array size for saveLowestAndHigh
+#define ARRAY_SIZE 4 // Adjust the size as needed
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class Trueopenlevels
+  {
+private:
+   string            name;
+   int               age;
+   string            quarterlyHour;
+   double               saveLowest;
+   double            saveHighest;
+   double            saveToMonthly;
+   double            saveToWeekly;
+   double            saveToYearly;
+   double            saveToDaily;
+
+public:
+   // Constructor
+                     Trueopenlevels(string _name, int _age)
+     {
+      name = _name;
+      age = _age;
+     }
+
+   // Getter for the daily property
+   double            GetMonthlyTrueOpen()
+     {
+      UpdateDaily(); // update function when calling
+      return saveToMonthly;
+     }
+     
+      double            GetWeeklyTrueOpen()
+     {
+      UpdateDaily(); // update function when calling
+      return saveToWeekly;
+     }
+
+    double            GetYearlyTrueOpen()
+     {
+      UpdateDaily(); // update function when calling
+      return saveToYearly;
+     }
+     
+      double            GetDailyTrueOpen()
+     {
+      UpdateDaily(); // update function when calling
+      return saveToDaily;
+     }
+     
+
+ 
+
+
+private:
+   void              UpdateDaily()
+     {
+     
+     MqlDateTime currentnu;
+      TimeToStruct(TimeCurrent(), currentnu);
+
+   //  Comment("Test 1 current nu day " + currentnu.day);
+for(int i=currentnu.day; i > 0; i-- ){
+ MqlDateTime currentnow;
+      TimeToStruct(iTime(_Symbol,PERIOD_D1,i), currentnow);
+
+//Monthly TO
+      if((currentnow.day >= 8 && currentnow.day <= 15 )&& currentnow.day_of_week == 1){
+       //Comment("TO Monthly " + currentnow.day);
+        saveToMonthly=iOpen(_Symbol,PERIOD_D1,i);
+       ObjectCreate(0, "TO Monthly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_D1,i), saveToMonthly, TimeCurrent(), saveToMonthly);
+        ObjectSetInteger(0, "TO Monthly", OBJPROP_COLOR, clrGold);
+         ObjectSetInteger(0, "TO Monthly", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "TO Monthly", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+}
+        }
+        
+        
+        for(int i=currentnu.day_of_week; i > 0; i-- ){
+ MqlDateTime currentnow;
+      TimeToStruct(iTime(_Symbol,PERIOD_D1,i), currentnow);
+
+//Weekly TO
+      if(currentnow.day_of_week == 2){
+       //Comment("TO Monthly " + currentnow.day);
+       saveToWeekly=iOpen(_Symbol,PERIOD_D1,i);
+       ObjectCreate(0, "TO Weekly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_D1,i), saveToWeekly, TimeCurrent(), saveToWeekly);
+        ObjectSetInteger(0, "TO Weekly", OBJPROP_COLOR, clrGreenYellow);
+         ObjectSetInteger(0, "TO Weekly", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "TO Weekly", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+ 
+}
+        }
+        
+        
+   for(int i=currentnu.hour; i > 0; i-- ){
+ MqlDateTime currentnow;
+      TimeToStruct(iTime(_Symbol,PERIOD_H1,i), currentnow);
+
+//Daily TO
+      if(currentnow.hour == 6){
+       //Comment("TO Monthly " + currentnow.day);
+       saveToDaily=iOpen(_Symbol,PERIOD_H1,i);
+       ObjectCreate(0, "TO Daily", OBJ_TREND, 0, iTime(_Symbol,PERIOD_H1,i), saveToDaily, TimeCurrent(), saveToDaily);
+        ObjectSetInteger(0, "TO Daily", OBJPROP_COLOR, clrGreen);
+         ObjectSetInteger(0, "TO Daily", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "TO Daily", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+ 
+}
+        }     
+       
+        for(int i=currentnu.mon; i > 0; i--){
+ MqlDateTime currentnow;
+      TimeToStruct(iTime(_Symbol,PERIOD_MN1,i), currentnow);
+
+//Yearly TO
+      if(currentnow.mon == 4){
+       //Comment("TO Monthly " + currentnow.day);
+       saveToYearly=iOpen(_Symbol,PERIOD_MN1,i);
+       ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
+        ObjectSetInteger(0, "TO Yearly", OBJPROP_COLOR, clrRed);
+         ObjectSetInteger(0, "TO Yearly", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "TO Yearly", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+       //  Comment("curr " + currentnu.mon);
+}
+        }
+        
+        
+
+
+// entry level quarter 3 wednesday
+  
+  if(currentnu.day_of_week == 4 && currentnu.hour == 15 ){
+   ObjectCreate(0, "wednesday v line", OBJ_VLINE, 0, iTime(_Symbol,PERIOD_D1,0), iOpen(_Symbol,PERIOD_D1,0));
+        ObjectSetInteger(0, "wednesday v line", OBJPROP_COLOR, clrGreen);
+         ObjectSetInteger(0, "wednesday v line", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "wednesday v line", OBJPROP_BORDER_TYPE, BORDER_FLAT);   
+     }
+     
+     // entry level quarter 3 15:00 intraday
+     
+     if(currentnu.hour == 15 ){
+   ObjectCreate(0, "wednesday v line", OBJ_VLINE, 0, iTime(_Symbol,PERIOD_H1,0), iOpen(_Symbol,PERIOD_H1,0));
+        ObjectSetInteger(0, "wednesday v line", OBJPROP_COLOR, clrYellow);
+         ObjectSetInteger(0, "wednesday v line", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "wednesday v line", OBJPROP_BORDER_TYPE, BORDER_FLAT);   
+     }
+     
+     
+     }
+  
+     
+     
+  };
+//+------------------------------------------------------------------+
