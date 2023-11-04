@@ -1,0 +1,163 @@
+// Define the array size for saveLowestAndHigh
+#define ARRAY_SIZE 4 // Adjust the size as needed
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class WeeklySwing
+  {
+private:
+   string            name;
+   int               age;
+   double saveLowestPrevDay;
+   double saveHighestPrevDay;
+   double ObTesla;
+
+
+public:
+   // Constructor 
+   WeeklySwing(string _name, int _age)
+     {
+      name = _name;
+      age = _age;
+     }
+
+   // Getter for the daily property
+   double            GetLowestPrevDay()
+     {
+      UpdateDaily(); // update function when calling
+      return saveLowestPrevDay;
+     }
+     
+      // Getter for the daily property
+   double            GetHighestPrevDay()
+     {
+      UpdateDaily(); // update function when calling
+      return saveHighestPrevDay;
+     }
+
+
+
+
+private:
+   void              UpdateDaily()
+     {
+      MqlDateTime currentnow;
+      TimeToStruct(TimeCurrent(), currentnow);
+
+      // 1 uur verder is MQL5 server
+      if(currentnow.day_of_week != 1 && currentnow.day_of_week != 4 && currentnow.day_of_week != 5){
+    
+     if(currentnow.day == 1)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob";
+         ObjectCreate(0, "weekly ob", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob", OBJPROP_COLOR, clrWhite);
+         ObjectSetInteger(0, "weekly ob", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+    
+      if(currentnow.day == 5)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob";
+         ObjectCreate(0, "weekly ob", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob", OBJPROP_COLOR, clrWhite);
+         ObjectSetInteger(0, "weekly ob", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        if(currentnow.day == 8)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 8";
+         ObjectCreate(0, "weekly ob 8", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 8", OBJPROP_COLOR, clrGreen);
+         ObjectSetInteger(0, "weekly ob 8", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 8", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+          if(currentnow.day == 11)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 11";
+         ObjectCreate(0, "weekly ob 11", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 11", OBJPROP_COLOR, clrOrange);
+         ObjectSetInteger(0, "weekly ob 11", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 11", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+          if(currentnow.day == 14)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 13";
+         ObjectCreate(0, "weekly ob 14", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 14", OBJPROP_COLOR, clrSeaGreen);
+         ObjectSetInteger(0, "weekly ob 14", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 14", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+          if(currentnow.day == 17)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 7";
+         ObjectCreate(0, "weekly ob 17", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 17", OBJPROP_COLOR, clrGreen);
+         ObjectSetInteger(0, "weekly ob 17", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 17", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+          if(currentnow.day == 23)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 23";
+         ObjectCreate(0, "weekly ob 23", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 23", OBJPROP_COLOR, clrGreen);
+         ObjectSetInteger(0, "weekly ob 23", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 23", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        if(currentnow.day == 26)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 26";
+         ObjectCreate(0, "weekly ob 26", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 26", OBJPROP_COLOR, clrPurple);
+         ObjectSetInteger(0, "weekly ob 26", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 26", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        if(currentnow.day == 29)
+        {
+         saveLowestPrevDay = iLow(_Symbol, PERIOD_D1, 1);
+         saveHighestPrevDay = iHigh(_Symbol, PERIOD_D1, 1);
+         ObTesla = "weekly ob 29";
+         ObjectCreate(0, "weekly ob 29", OBJ_RECTANGLE, 0, iTime(_Symbol,PERIOD_D1,1), saveHighestPrevDay, iTime(_Symbol,PERIOD_M15,0), saveLowestPrevDay);
+        ObjectSetInteger(0, "weekly ob 29", OBJPROP_COLOR, clrYellowGreen);
+         ObjectSetInteger(0, "weekly ob 29", OBJPROP_BACK, true);
+         ObjectSetInteger(0, "weekly ob 29", OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+        }
+        
+        }
+}
+     };
+   //+------------------------------------------------------------------+
+   
