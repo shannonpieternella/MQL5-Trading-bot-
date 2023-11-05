@@ -136,6 +136,94 @@ Print("it works!!");
                //  ObjectDelete(0,"arr ob" + i);
               }
            }
+           
+           
+           // external buyside daily liquidity
+           
+           // Controleer of het huidige uur 16 (4 uur 's middags) is
+      if(current.hour == 8)
+        {
+         // Loop door een reeks historische prijsstaven op het M30-tijdsbestek (elke 30 minuten)
+         for(int i = 10; i > 0; i--)
+           {
+
+            // Controleer of er een prijskloof (gap) is tussen iLow op de huidige staaf en iHigh op de vorige staaf
+            // waarbij de kloof groter is dan 100 keer de minimale prijsverandering (_Point)
+            if(iHigh(_Symbol, PERIOD_D1, i))
+              {
+               // Als de kloofvoorwaarde is voldaan, worden enkele waarden vastgelegd
+               //saveDailyPOILimit = iHigh(_Symbol, PERIOD_D1, i);
+               saveDailyPOIHigh = iHigh(_Symbol, PERIOD_D1, i);
+               saveNumberLoop = i;
+               saveTimeLoop = iTime(_Symbol, PERIOD_D1, i);
+Print("it works!!");
+               // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
+
+               // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
+
+               // Geef wat informatie weer in de MetaTrader-logboeken
+               Print("start numberloop" + saveNumberLoop);
+               bool createArrow = false; // Initialize the flag
+
+               // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
+               for(int x = saveNumberLoop; x > 0; x--)
+                 {
+
+                //  Print("Savenumberloop " + saveNumberLoop + " ilow < " + iHigh(_Symbol, PERIOD_D1, x) + " < " + saveDailyPOILow);
+                  // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
+                  if(iHigh(_Symbol, PERIOD_D1, x) > saveDailyPOIHigh)
+                    {
+                    Print("it works!! 1");
+                     if(0 == 1)
+                       {
+
+
+                        ObjectCreate(0, "Liquidity ob" + i, OBJ_ARROW,0,saveTimeLoop,saveDailyPOIHigh);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_COLOR, clrBlue);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+                        ObjectCreate(0, "Liquidity ob" + i, OBJ_ARROW_DOWN,0,iTime(_Symbol, PERIOD_M30, x),iLow(_Symbol, PERIOD_M30, x));
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_COLOR, clrRed);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                       }
+                     //stopLoop = true;
+                     // createArrow = true; // Set the flag to prevent the rectangle from being created
+                     break;
+
+                    }
+                  else
+                     if(iHigh(_Symbol, PERIOD_D1, x) < saveDailyPOIHigh && x <= 1)
+                       {
+                     //  ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
+       Print("it works!! 2");
+                        ObjectCreate(0, "external liquidity high" + i, OBJ_TREND, 0, saveTimeLoop, saveDailyPOIHigh,TimeCurrent(),saveDailyPOIHigh);
+                        ObjectSetInteger(0, "external liquidity high" + i, OBJPROP_COLOR, clrRed);
+                        ObjectSetInteger(0, "external liquidity high" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "external liquidity high" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                        //stopLoop = true;
+
+                        // Als aan de voorwaarde is voldaan, wordt er een rechthoekig object op de grafiek gecreëerd
+
+                       }
+                 }
+              }
+
+           }
+        }
+      else
+         if(current.hour == 6)
+           {
+            for(int i = 10; i > 0; i--)
+              {
+               ObjectDelete(0,"external liquidity" + i);
+               
+               ObjectDelete(0,"external liquidity high" + i);
+               //  ObjectDelete(0,"arr ob 2" + i);
+               //  ObjectDelete(0,"arr ob" + i);
+              }
+           }
 }
       
 
