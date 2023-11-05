@@ -5,6 +5,7 @@
 //+------------------------------------------------------------------+
 #include <Trade\Person.mqh>
 #include <Trade\quarterlydailycycles.mqh>
+#include <Trade\externalliquidity.mqh>
 #include <Trade\Trade.mqh>
 #include <Trade\weeklyswing369.mqh>
 #include <Trade\gaps.mqh>
@@ -24,6 +25,7 @@ public:
   };
 
 // Declare the Person object in a broader scope
+Externalliquidity externalliquidity("John Doe", 30, false);
 Quarterlydailycycles quarterlydailycycles("John Doe", 30);
 Person person("John Doe", 30);
 WeeklySwing weeklySwing("John Doe", 30);
@@ -68,7 +70,7 @@ void OnTick()
    double getHighSession = quarterlydailycycles.GetHighest();
    double weeklyPoiLow = weeklySwing.GetLowestPrevDay();
    double weeklyPoiHigh = weeklySwing.GetHighestPrevDay();
-   
+   double liquidityLevel= externalliquidity.GetDailyLiquidityPoiLow();
    double trueopenlevelMonth = trueopenlevels.GetMonthlyTrueOpen();
    double trueopenlevelWeekly = trueopenlevels.GetWeeklyTrueOpen();
    double monthlyEquilibrium = discountPremium.GetMidLevelMonth();
