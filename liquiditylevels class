@@ -58,7 +58,7 @@ private:
       if(current.hour == 8)
         {
          // Loop door een reeks historische prijsstaven op het M30-tijdsbestek (elke 30 minuten)
-         for(int i = 100; i > 0; i--)
+         for(int i = 10; i > 0; i--)
            {
 
             // Controleer of er een prijskloof (gap) is tussen iLow op de huidige staaf en iHigh op de vorige staaf
@@ -112,10 +112,10 @@ Print("it works!!");
                        {
                      //  ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
        Print("it works!! 2");
-                        ObjectCreate(0, "weekly ob" + i, OBJ_HLINE, 0, saveTimeLoop, saveDailyPOILow,TimeCurrent(),saveDailyPOILow);
-                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_COLOR, clrYellow);
-                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BACK, true);
-                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                        ObjectCreate(0, "external liquidity" + i, OBJ_TREND, 0, saveTimeLoop, saveDailyPOILow,TimeCurrent(),saveDailyPOILow);
+                        ObjectSetInteger(0, "external liquidity" + i, OBJPROP_COLOR, clrYellow);
+                        ObjectSetInteger(0, "external liquidity" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "external liquidity" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
                         //stopLoop = true;
 
                         // Als aan de voorwaarde is voldaan, wordt er een rechthoekig object op de grafiek gecreëerd
@@ -129,9 +129,9 @@ Print("it works!!");
       else
          if(current.hour == 6)
            {
-            for(int i = 100; i > 0; i--)
+            for(int i = 10; i > 0; i--)
               {
-               ObjectDelete(0,"weekly ob" + i);
+               ObjectDelete(0,"external liquidity" + i);
                //  ObjectDelete(0,"arr ob 2" + i);
                //  ObjectDelete(0,"arr ob" + i);
               }
