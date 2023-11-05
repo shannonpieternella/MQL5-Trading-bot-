@@ -1,0 +1,144 @@
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class Externalliquidity
+  {
+private:
+   string            name;
+   int               age;
+   string            quarterlyHour;
+   double            currentcandleDayhr;
+   double            saveTimeSell15;
+   double            bearishgaphigh15;
+   double            saveTimeBuy15;
+   double            bearishGap15;
+   double            bullishGap15;
+   double            bullishgaplow15;
+   double            bearishGap;
+   double            saveLowest;
+   string            intradayBias;
+   double            saveDailyPOIHigh;
+   double            saveDailyPOILow;
+   int               saveNumberLoop;
+   datetime          saveTimeLoop;
+   double            saveGapPOIHigh2;
+   double            saveGapPOILow2;
+   int               saveNumberLoop2;
+   datetime          saveTimeLoop2;
+   bool              stopLoop;
+
+public:
+                     Externalliquidity(string _name, int _age, bool stopLoop)
+     {
+      name = _name;
+      age = _age;
+      stopLoop = false;
+     }
+
+   string            GetGap()
+     {
+      UpdateDaily();
+      return intradayBias;
+     }
+     
+     double            GetDailyLiquidityPoiLow()
+     {
+      UpdateDaily();
+      return saveDailyPOILow;
+      
+     }
+
+private:
+   void              UpdateDaily()
+     {
+      MqlDateTime current;
+      TimeToStruct(TimeCurrent(), current);
+
+      // Controleer of het huidige uur 16 (4 uur 's middags) is
+      if(current.hour == 8)
+        {
+         // Loop door een reeks historische prijsstaven op het M30-tijdsbestek (elke 30 minuten)
+         for(int i = 100; i > 0; i--)
+           {
+
+            // Controleer of er een prijskloof (gap) is tussen iLow op de huidige staaf en iHigh op de vorige staaf
+            // waarbij de kloof groter is dan 100 keer de minimale prijsverandering (_Point)
+            if(iLow(_Symbol, PERIOD_D1, i))
+              {
+               // Als de kloofvoorwaarde is voldaan, worden enkele waarden vastgelegd
+               //saveDailyPOILimit = iHigh(_Symbol, PERIOD_D1, i);
+               saveDailyPOILow = iLow(_Symbol, PERIOD_D1, i);
+               saveNumberLoop = i;
+               saveTimeLoop = iTime(_Symbol, PERIOD_D1, i);
+Print("it works!!");
+               // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
+
+               // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
+
+               // Geef wat informatie weer in de MetaTrader-logboeken
+               Print("start numberloop" + saveNumberLoop);
+               bool createArrow = false; // Initialize the flag
+
+               // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
+               for(int x = saveNumberLoop; x > 0; x--)
+                 {
+
+                  Print("Savenumberloop " + saveNumberLoop + " ilow < " + iLow(_Symbol, PERIOD_M30, x) + " < " + saveDailyPOILow);
+                  // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
+                  if(iLow(_Symbol, PERIOD_D1, x) < saveDailyPOILow)
+                    {
+                    Print("it works!! 1");
+                     if(0 == 1)
+                       {
+
+
+                        ObjectCreate(0, "Liquidity ob" + i, OBJ_ARROW,0,saveTimeLoop,saveDailyPOILow);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_COLOR, clrBlue);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+
+                        ObjectCreate(0, "Liquidity ob" + i, OBJ_ARROW_DOWN,0,iTime(_Symbol, PERIOD_M30, x),iLow(_Symbol, PERIOD_M30, x));
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_COLOR, clrYellow);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "Liquidity ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                       }
+                     //stopLoop = true;
+                     // createArrow = true; // Set the flag to prevent the rectangle from being created
+                     break;
+
+                    }
+                  else
+                     if(iLow(_Symbol, PERIOD_D1, x) > saveDailyPOILow && x <= 1)
+                       {
+                     //  ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
+       Print("it works!! 2");
+                        ObjectCreate(0, "weekly ob" + i, OBJ_HLINE, 0, saveTimeLoop, saveDailyPOILow,TimeCurrent(),saveDailyPOILow);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_COLOR, clrYellow);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BACK, true);
+                        ObjectSetInteger(0, "weekly ob" + i, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+                        //stopLoop = true;
+
+                        // Als aan de voorwaarde is voldaan, wordt er een rechthoekig object op de grafiek gecreëerd
+
+                       }
+                 }
+              }
+
+           }
+        }
+      else
+         if(current.hour == 6)
+           {
+            for(int i = 100; i > 0; i--)
+              {
+               ObjectDelete(0,"weekly ob" + i);
+               //  ObjectDelete(0,"arr ob 2" + i);
+               //  ObjectDelete(0,"arr ob" + i);
+              }
+           }
+}
+      
+
+
+  };
+//+------------------------------------------------------------------+
