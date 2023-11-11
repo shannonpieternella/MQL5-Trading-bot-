@@ -53,6 +53,13 @@ private:
      {
       MqlDateTime current;
       TimeToStruct(TimeCurrent(), current);
+      
+          int countArrayLowLiquidity = 0;
+    int countArrayHighLiquidity = 0;
+
+    double myArrayLiquidityHigh[];
+    double myArrayLiquidityLow[];
+
 
       // Controleer of het huidige uur 16 (4 uur 's middags) is
       if(current.hour == 8)
@@ -70,24 +77,24 @@ private:
                saveDailyPOILow = iLow(_Symbol, PERIOD_D1, i);
                saveNumberLoop = i;
                saveTimeLoop = iTime(_Symbol, PERIOD_D1, i);
-Print("it works!!");
+//Print("it works!!");
                // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
 
                // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
 
                // Geef wat informatie weer in de MetaTrader-logboeken
-               Print("start numberloop" + saveNumberLoop);
+               //Print("start numberloop" + saveNumberLoop);
                bool createArrow = false; // Initialize the flag
 
                // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
                for(int x = saveNumberLoop; x > 0; x--)
                  {
 
-                  Print("Savenumberloop " + saveNumberLoop + " ilow < " + iLow(_Symbol, PERIOD_M30, x) + " < " + saveDailyPOILow);
+                 // Print("Savenumberloop " + saveNumberLoop + " ilow < " + iLow(_Symbol, PERIOD_M30, x) + " < " + saveDailyPOILow);
                   // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
                   if(iLow(_Symbol, PERIOD_D1, x) < saveDailyPOILow)
                     {
-                    Print("it works!! 1");
+                   // Print("it works!! 1");
                      if(0 == 1)
                        {
 
@@ -110,8 +117,14 @@ Print("it works!!");
                   else
                      if(iLow(_Symbol, PERIOD_D1, x) > saveDailyPOILow && x <= 1)
                        {
+                       
+                       // Do something if the condition is met
+                        countArrayLowLiquidity++;
+                        // Push values into the array
+                        ArrayResize(myArrayLiquidityLow, countArrayLowLiquidity);
+                        myArrayLiquidityLow[countArrayLowLiquidity - 1] = saveDailyPOILow;
                      //  ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
-       Print("it works!! 2");
+       Print("it works!! 2 array low" + countArrayLowLiquidity + " " + myArrayLiquidityLow[countArrayLowLiquidity - 1]);
                         ObjectCreate(0, "external liquidity" + i, OBJ_TREND, 0, saveTimeLoop, saveDailyPOILow,TimeCurrent(),saveDailyPOILow);
                         ObjectSetInteger(0, "external liquidity" + i, OBJPROP_COLOR, clrYellow);
                         ObjectSetInteger(0, "external liquidity" + i, OBJPROP_BACK, true);
@@ -156,13 +169,13 @@ Print("it works!!");
                saveDailyPOIHigh = iHigh(_Symbol, PERIOD_D1, i);
                saveNumberLoop = i;
                saveTimeLoop = iTime(_Symbol, PERIOD_D1, i);
-Print("it works!!");
+//Print("it works!!");
                // met enkele specifieke eigenschappen zoals kleur, achtergrond en randtype.
 
                // Print("Create object with gap start 3 x " + " i " + i + " / " + x + " gap poi low " + saveGapPOILow);
 
                // Geef wat informatie weer in de MetaTrader-logboeken
-               Print("start numberloop" + saveNumberLoop);
+               //Print("start numberloop" + saveNumberLoop);
                bool createArrow = false; // Initialize the flag
 
                // Loop opnieuw door een reeks prijsstaven, maar deze keer beginnend bij 'saveNumberLoop'
@@ -173,7 +186,7 @@ Print("it works!!");
                   // Controleer of 'saveGapPOILow' groter is dan de lage prijs op de huidige staaf 'x'
                   if(iHigh(_Symbol, PERIOD_D1, x) > saveDailyPOIHigh)
                     {
-                    Print("it works!! 1");
+                  //  Print("it works!! 1");
                      if(0 == 1)
                        {
 
@@ -196,8 +209,17 @@ Print("it works!!");
                   else
                      if(iHigh(_Symbol, PERIOD_D1, x) < saveDailyPOIHigh && x <= 1)
                        {
+                       
+                       
+                       // Do something if the condition is met
+                        countArrayHighLiquidity++;
+                        // Push values into the array
+                        ArrayResize(myArrayLiquidityHigh, countArrayHighLiquidity);
+                        myArrayLiquidityHigh[countArrayHighLiquidity - 1] = saveDailyPOIHigh;
+
                      //  ObjectCreate(0, "TO Yearly", OBJ_TREND, 0, iTime(_Symbol,PERIOD_MN1,i), saveToYearly, TimeCurrent(), saveToYearly);
-       Print("it works!! 2");
+      Print("it works!! 2 array high" + countArrayHighLiquidity + " " + myArrayLiquidityHigh[countArrayHighLiquidity - 1]);
+       
                         ObjectCreate(0, "external liquidity high" + i, OBJ_TREND, 0, saveTimeLoop, saveDailyPOIHigh,TimeCurrent(),saveDailyPOIHigh);
                         ObjectSetInteger(0, "external liquidity high" + i, OBJPROP_COLOR, clrRed);
                         ObjectSetInteger(0, "external liquidity high" + i, OBJPROP_BACK, true);
