@@ -1,0 +1,162 @@
+//+------------------------------------------------------------------+
+//|                                                      ProjectName |
+//|                                      Copyright 2020, CompanyName |
+//|                                       http://www.companyname.net |
+//+------------------------------------------------------------------+
+#include <Trade\Person.mqh>
+#include <Trade\quarterlydailycycles.mqh>
+#include <Trade\externalliquidity.mqh>
+#include <Trade\Trade.mqh>
+#include <Trade\weeklyswing369.mqh>
+#include <Trade\gaps.mqh>
+#include <Trade\TOlevels.mqh>
+#include <Trade\discountpremium.mqh>
+CTrade trade;
+
+bool input bullish; //Up
+bool input bearish; //Down
+
+// Define the Person class from Person.mqh
+class Person : public WeekQuarters
+  {
+public:
+   // Constructor
+                     Person(string _name, int _age) : WeekQuarters(_name, _age) {}
+  };
+
+// Declare the Person object in a broader scope
+Externalliquidity externalliquidity("John Doe", 30, false);
+Quarterlydailycycles quarterlydailycycles("John Doe", 30);
+Person person("John Doe", 30);
+WeeklySwing weeklySwing("John Doe", 30);
+Gaps gaps("John Doe", 30, false);
+Trueopenlevels trueopenlevels("John Doe", 30);
+DiscountPremium discountPremium("John Doe", 30);
+
+int saveTimeBuyDay;
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+// Initialization code here
+   return(INIT_SUCCEEDED);
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   MqlDateTime currentnow;
+   TimeToStruct(TimeCurrent(), currentnow);
+// Get the week property value using the GetWeek() method
+   string week = person.GetWeek();
+
+// Print the week value
+// Print("Week: ", week);
+
+// We calculate the Ask price
+   double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+
+// We calculate the Bid price
+   double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+
+
+
+
+// Get the week property value using the GetWeek() method
+   double getLowSession = quarterlydailycycles.GetDaily();
+   double getHighSession = quarterlydailycycles.GetHighest();
+   double weeklyPoiLow = weeklySwing.GetLowestPrevDay();
+   double weeklyPoiHigh = weeklySwing.GetHighestPrevDay();
+   double liquidityLevel= externalliquidity.GetDailyLiquidityPoiLow();
+   double trueopenlevelMonth = trueopenlevels.GetMonthlyTrueOpen();
+   double trueopenlevelWeekly = trueopenlevels.GetWeeklyTrueOpen();
+   double monthlyEquilibrium = discountPremium.GetMidLevelMonth();
+   double weeklyEquilibrium = discountPremium.GetMidLevelWeekly();
+   double dailyEquilibrium = discountPremium.GetMidLevelDaily();
+   double trueopenlevelYearly = trueopenlevels.GetYearlyTrueOpen();
+   double trueopenlevelDaily = trueopenlevels.GetDailyTrueOpen();
+   double gapBearishigh = gaps.GetGapBearishHigh();
+   double gapBearishLow = gaps.GetGapBearishLow();
+   double gapBullishhigh = gaps.GetGapBullishHigh();
+   double gapBullishLow = gaps.GetGapBullishLow();
+
+
+   MqlDateTime currentcandleDayhr;
+   TimeToStruct(iTime(_Symbol, PERIOD_H4, 0), currentcandleDayhr);
+
+
+//Print("Weekly POI low " + weeklyPoiLow + "Weekly POI high " + weeklyPoiHigh + "Monthly true open " + trueopenlevelMonth + " Lowest Value: ", getLowSession + "Highest value " + getHighSession + "Local time " + TimeLocal() + "LOW PREV DAY  " + weeklyPoiLow + "High PREV DAY  " + weeklyPoiHigh);
+
+   if(0 == 0)
+
+     {
+      // uur is altijd 1 uur later op de server // sell gap
+      if((currentnow.mon >= 4 && currentnow.mon <= 10) && saveTimeBuyDay != currentcandleDayhr.day && (currentnow.hour == 17 && currentnow.min > 10) && iLow(_Symbol, PERIOD_M1, 3) > iHigh(_Symbol, PERIOD_M1, 1) + 30 * _Point)
+        {
+         //    trade.SellStop(0.3, getLowSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+         //  trade.SellLimit(0.3, getHighSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+         //trade.BuyStop(0.3, getHighSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+         Comment(currentnow.mon + " Sell ");
+      //   trade.Sell(0.1, NULL, Bid, iHigh(_Symbol, PERIOD_H1, 3),iHigh(_Symbol, PERIOD_M1, 3)-3000*_Point, NULL);
+
+         saveTimeBuyDay=currentcandleDayhr.day;
+        }
+
+      if((currentnow.mon >= 4 && currentnow.mon <= 10) && saveTimeBuyDay != currentcandleDayhr.day && (currentnow.hour == 17 && currentnow.min > 10) && iHigh(_Symbol, PERIOD_M1, 3) < iLow(_Symbol, PERIOD_M1, 1) - 10 * _Point)
+        {
+         //trade.SellStop(0.3, getLowSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+         //trade.BuyStop(0.3, getHighSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+         //trade.BuyLimit(0.3, getLowSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+     //    trade.Buy(0.1, NULL, Ask, iLow(_Symbol, PERIOD_H1, 3),iLow(_Symbol, PERIOD_M1, 3)+3000*_Point, NULL);
+         Comment(currentnow.mon + " Buy ");
+         saveTimeBuyDay=currentcandleDayhr.day;
+        }
+
+
+      if((currentnow.mon >= 11 || currentnow.mon <= 3) && saveTimeBuyDay != currentcandleDayhr.day && (currentnow.hour == 16 && currentnow.min > 10) && iLow(_Symbol, PERIOD_M1, 3) > iHigh(_Symbol, PERIOD_M1, 1) + 30 * _Point)
+        {
+         //    trade.SellStop(0.3, getLowSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+         //  trade.SellLimit(0.3, getHighSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+         //trade.BuyStop(0.3, getHighSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+
+         trade.Sell(0.1, NULL, Bid, iHigh(_Symbol, PERIOD_H1, 3),iHigh(_Symbol, PERIOD_M1, 3)-1800*_Point, NULL);
+         Comment(currentnow.mon + " Buy 2");
+         saveTimeBuyDay=currentcandleDayhr.day;
+        }
+
+      if((currentnow.mon >= 11 || currentnow.mon <= 3) && saveTimeBuyDay != currentcandleDayhr.day && (currentnow.hour == 16 && currentnow.min > 10) && iHigh(_Symbol, PERIOD_M1, 3) < iLow(_Symbol, PERIOD_M1, 1) - 10 * _Point)
+        {
+         //trade.SellStop(0.3, getLowSession, _Symbol, iHigh(_Symbol, PERIOD_W1, 1), iLow(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+
+         //trade.BuyStop(0.3, getHighSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+         //trade.BuyLimit(0.3, getLowSession, _Symbol, iLow(_Symbol, PERIOD_W1, 1), iHigh(_Symbol, PERIOD_W1, 1), ORDER_TIME_DAY, 0, NULL);
+         trade.Buy(0.1, NULL, Ask, iLow(_Symbol, PERIOD_H1, 3),iLow(_Symbol, PERIOD_M1, 3)+1800*_Point, NULL);
+         Comment(currentnow.mon + " Buy 2");
+         saveTimeBuyDay=currentcandleDayhr.day;
+        }
+
+
+
+
+
+
+     }
+
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+// Deinitialization code here
+  }
+//+------------------------------------------------------------------+
